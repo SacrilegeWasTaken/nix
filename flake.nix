@@ -36,14 +36,14 @@
     let
       lib = nixpkgs.lib;
       pkgsFor = system: import nixpkgs { inherit system; config.allowUnfree = true; };
+      # For NixOS: use currentSystem when Linux (nixos-rebuild on host), else x86_64-linux so any arch works.
+      systemArchitecture = let s = builtins.currentSystem; in if builtins.match ".*-linux" s != null then s else "x86_64-linux";
     in {
-
-      formatter.aarch64-darwin = (pkgsFor "aarch64-darwin").nixpkgs-fmt;
-      formatter.aarch64-linux = (pkgsFor "aarch64-linux").nixpkgs-fmt;
+      formatter.${systemArchitecture} = (pkgsFor systemArchitecture).nixpkgs-fmt;
 
       # ---------- Darwin (macOS) ----------
       darwinConfigurations."laptop" = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin";
+        system = systemArchitecture;
         specialArgs = {
           inherit inputs;
           self = inputs.self;
@@ -92,7 +92,7 @@
 
       # ---------- NixOS (Linux) ----------
       nixosConfigurations.nixos = lib.nixosSystem {
-        system = "aarch64-linux";
+        system = systemArchitecture;
         specialArgs = { inherit inputs; };
         modules = [
           ./profiles/laptop.nix
@@ -110,7 +110,7 @@
       };
 
       nixosConfigurations.nixos-vm = lib.nixosSystem {
-        system = "aarch64-linux";
+        system = systemArchitecture;
         specialArgs = { inherit inputs; };
         modules = [
           ./profiles/vm.nix

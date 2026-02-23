@@ -3,7 +3,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
+  nixpkgs.hostPlatform = lib.mkDefault config.system.build.platform;
 
   fileSystems."/" = {
     device = "/dev/disk/by-label/nixos";

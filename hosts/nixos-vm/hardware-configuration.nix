@@ -3,7 +3,7 @@
 { config, lib, pkgs, ... }:
 
 {
-  nixpkgs.hostPlatform = lib.mkDefault "aarch64-linux";
+  nixpkgs.hostPlatform = lib.mkDefault config.system.build.platform;
   hardware.parallels.enable = true;
   nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "prl-tools" ];
 
