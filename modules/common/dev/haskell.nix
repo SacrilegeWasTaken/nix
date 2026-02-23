@@ -3,7 +3,7 @@
 
 {
   environment.systemPackages = with pkgs; [
-    ghc
+    haskell.compiler.ghc98
     cabal-install
     stack
   ];
