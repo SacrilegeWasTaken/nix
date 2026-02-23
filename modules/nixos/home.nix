@@ -1,0 +1,1 @@
+# Тут все что касается home-manager для NixOS, общее в common папке
