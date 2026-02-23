@@ -1,6 +1,6 @@
 # NixOS VM host (Parallels, arm64). Uses profile vm (lightweight).
 # Imports modules/nixos/* when they exist (see nixos-hosts todo).
-{ config, pkgs, ... }:
+{ config, pkgs, stateVersion, ... }:
 
 {
   imports = [
@@ -19,5 +19,5 @@
   };
   users.defaultUserShell = pkgs.fish;
 
-  system.stateVersion = "25.11";
+  system.stateVersion = stateVersion;
 }

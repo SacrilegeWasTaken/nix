@@ -1,5 +1,5 @@
 # NixOS laptop host. Uses profile laptop; common dev from flake.
-{ config, pkgs, ... }:
+{ config, pkgs, stateVersion, ... }:
 
 {
   imports = [
@@ -14,5 +14,5 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  system.stateVersion = "25.11";
+  system.stateVersion = stateVersion;
 }
