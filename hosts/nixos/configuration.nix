@@ -2,17 +2,21 @@
 { config, pkgs, stateVersion, ... }:
 
 {
+  # Hardware per-machine: on each laptop run nixos-generate-config, keep /etc/nixos/hardware-configuration.nix
   imports = [
-    ./hardware-configuration.nix
+    "/etc/nixos/hardware-configuration.nix"
     ../../modules/nixos/base.nix
     ../../modules/nixos/users/vietnamveteran.nix
     ../../modules/nixos/desktop/gnome.nix
   ];
 
   networking.hostName = "nixos";
+  nixpkgs.config.allowUnfree = true;
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
   system.stateVersion = stateVersion;
+
+  nixpkgs.config.allowUnfree = true;
 }

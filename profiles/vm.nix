@@ -17,5 +17,7 @@
     firefox
     vscode
     code-cursor
+    llvm
+    clang
   ];
 }
