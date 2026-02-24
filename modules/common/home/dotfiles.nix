@@ -8,7 +8,7 @@ lib.mkIf (dotfilesDir != null) {
     {
       "starship.toml".source = dotfilesDir + "/common/starship.toml";
       "kitty/kitty.conf".source = dotfilesDir + "/common/kitty.conf";
-      "zed".source = dotfilesDir + "/common/zed";
+      "zed" = { source = dotfilesDir + "/common/zed"; force = true; };
       "neofetch/config.conf".source = dotfilesDir + "/common/config.conf";
     }
     # ---------- Darwin only ----------

@@ -92,6 +92,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
             home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir; };
             home-manager.users.vietnamveteran.imports = [
               ./home/default.nix
@@ -115,6 +116,7 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
             home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir; };
             home-manager.users.vietnamveteran.imports = [
               ./home/default.nix
