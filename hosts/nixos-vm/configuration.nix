@@ -15,7 +15,7 @@
   nixpkgs.config.allowUnfree = true;
 
   # Русская локаль и раскладка
-  i18n.defaultLocale = "ru_RU.UTF-8";
+  i18n.defaultLocale = "en_US.UTF-8";
   i18n.extraLocaleSettings = {
     LC_ADDRESS = "ru_RU.UTF-8";
     LC_IDENTIFICATION = "ru_RU.UTF-8";
@@ -29,14 +29,15 @@
   };
   i18n.supportedLocales = [ "en_US.UTF-8/UTF-8" "ru_RU.UTF-8/UTF-8" ];
 
-  console.keyMap = "ru";
+  # Использовать те же раскладки и переключение в консоли (tty), что и в X.
+  console.useXkbConfig = true;
 
   services.xserver = {
     enable = true;
     xkb = {
       layout = "us,ru";
       variant = "";
-      options = "grp:alt_shift_toggle";
+      options = "grp:ctrl_l_toggle";
     };
   };
 

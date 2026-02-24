@@ -141,6 +141,7 @@
           ./hosts/nixos-vm/configuration.nix
           ./modules/nix/nix-settings.nix
           ./modules/nixos/desktop/gnome.nix
+          sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
