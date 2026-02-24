@@ -13,6 +13,7 @@
     git-lfs
     neovim
     fish
+    starship
     tree
     firefox
     vscode
