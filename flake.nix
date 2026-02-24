@@ -140,6 +140,7 @@
           ./profiles/vm.nix
           ./hosts/nixos-vm/configuration.nix
           ./modules/nix/nix-settings.nix
+          ./modules/nixos/desktop/gnome.nix
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;
