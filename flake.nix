@@ -23,6 +23,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     homebrew-core = { url = "github:homebrew/homebrew-core"; flake = false; };
     homebrew-cask = { url = "github:homebrew/homebrew-cask"; flake = false; };
     nikitabobko-tap = { url = "github:nikitabobko/homebrew-tap"; flake = false; };
@@ -31,7 +36,7 @@
 
   outputs = inputs @ { self, nix-darwin, nixpkgs, home-manager, nix-homebrew
     , homebrew-core, homebrew-cask, nikitabobko-tap, olovebar-tap, nixvim
-    , ...
+    , sops-nix, ...
     }:
     let
       lib = nixpkgs.lib;
@@ -72,6 +77,7 @@
           ./modules/apps/vscode.nix
           ./modules/apps/olovebar.nix
           ./modules/neovim/nixvim.nix
+          sops-nix.darwinModules.sops
           nix-homebrew.darwinModules.nix-homebrew
           {
             nix-homebrew = {
@@ -112,6 +118,7 @@
           ./modules/nix/nix-settings.nix
           ./modules/common/dev/rust.nix
           ./modules/common/dev/haskell.nix
+          sops-nix.nixosModules.sops
           home-manager.nixosModules.home-manager
           {
             home-manager.useGlobalPkgs = true;

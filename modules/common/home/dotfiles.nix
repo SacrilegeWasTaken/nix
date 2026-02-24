@@ -20,7 +20,6 @@ lib.mkIf (dotfilesDir != null) {
     # ---------- NixOS (Linux) only ----------
     (lib.mkIf (! pkgs.stdenv.isDarwin) {
       "tmux/tmux.conf".source = dotfilesDir + "/nixos/tmux.conf";
-      # Add Linux-only config files here if needed (e.g. nixos-specific app configs).
     })
   ];
 
