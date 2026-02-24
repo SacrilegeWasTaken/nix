@@ -13,6 +13,7 @@
     git-lfs
     neovim
     fish
+    gnumake
     starship
     tree
     firefox
