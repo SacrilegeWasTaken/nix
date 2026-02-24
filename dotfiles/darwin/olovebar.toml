@@ -1,0 +1,26 @@
+[widget]
+active_app_width = 55.0
+aerospace_width = 32.0
+apple_button_width = 45.0
+battery_width = 55.0
+corner_radius = 16.0
+glass_variant = 9
+language_width = 45.0
+left_spacing = 6.0
+notes_width = 48.0
+right_spacing = 6.0
+show_battery_percentage = false
+show_wifi_name = true
+time_button_width = 185.0
+volume_width = 45.0
+widget_height = 28.0
+wifi_width = 16.0
+
+[window]
+bar_height = 29.0
+bar_horizontal_cut = 10.0
+bar_vertical_cut = 5.0
+corner_radius = 16.0
+glass_variant = 13
+hide_on_fullscreen = true
+notch_min_width = 700.0

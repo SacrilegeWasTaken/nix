@@ -1,0 +1,107 @@
+{
+  "language_models": {
+    "copilot_chat": {
+      "api_url": "https://api.githubcopilot.com/chat/completions",
+      "auth_url": "https://api.github.com/copilot_internal/v2/token",
+      "models_url": "https://api.githubcopilot.com/models"
+    }
+  },
+  "agent": {
+    "inline_assistant_model": {
+      "provider": "zed.dev",
+      "model": "claude-3-7-sonnet"
+    },
+    "profiles": {
+      "main": {
+        "name": "Main",
+        "tools": {},
+        "enable_all_context_servers": false,
+        "context_servers": {}
+      }
+    },
+    "default_profile": "write",
+    "default_model": {
+      "provider": "zed.dev",
+      "model": "claude-3-7-sonnet"
+    },
+    "version": "2"
+  },
+  "show_edit_predictions": false,
+  "terminal": {
+    "dock": "right",
+    "font_size": 14.0,
+    "blinking": "on",
+    "cursor_shape": "bar"
+  },
+  "features": {
+    "edit_prediction_provider": "zed"
+  },
+  "buffer_font_family": "JetBrainsMono Nerd Font",
+  "ui_font_size": 16,
+  "buffer_font_size": 13.5,
+  "theme": {
+    "mode": "system",
+    "light": "One Light",
+    "dark": "Tokyo Night"
+  },
+  "languages": {
+    "Rust": {
+      "formatter": "language_server",
+      "format_on_save": "on"
+    },
+    "TOML": {
+      "format_on_save": "off"
+    }
+  },
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "rustfmt": {
+          "extraArgs": ["+nightly"]
+        },
+        "checkOnSave": true,
+        "check": {
+          "command": "clippy"
+        },
+        "highlightInactiveCode": false
+      }
+    }
+  },
+  "experimental.theme_overrides": {
+    "renamed.background": "#FFFFFF20",
+    "search.match_background": "#FFFFFF20",
+    "ghost_element.background": "#00000010",
+    "ghost_element.hover": "#00000099",
+    "background.appearance": "transparent",
+    "background": "#000000BC",
+    "editor.background": "#00000010",
+    "editor.gutter.background": "#00000010",
+    "title_bar.background": "#000000CC",
+    "toolbar.background": "#00000010",
+    "terminal.background": "#00000000",
+    "status_bar.background": "#000000CC",
+    "tab.active_background": "#000000",
+    "tab.inactive_background": "#00000000",
+    "tab_bar.background": "#00000010",
+    "panel.background": "#00000000",
+    "border": "#00000000",
+    "border.variant": "#00000000",
+    "scrollbar.track.border": "#00000000",
+    "scrollbar.track.background": "#00000000",
+    "scrollbar.thumb.background": "#00000000",
+    "scrollbar.thumb.hover.background": "#00000000",
+    "scrollbar.thumb.active.background": "#00000000",
+    "scrollbar.thumb.border": "#FFFFFF90",
+    "editor.line_highlight": "#00000000",
+    "editor.active_line.background": "#00000000",
+    "editor.selection.background": "#00000000",
+    "editor.selection.foreground": "#00000000",
+    "editor.selection.border": "#00000000",
+    "editor.selection.inactive.foreground": "#00000000",
+    "editor.selection.inactive.border": "#00000000",
+    "editor.selection.active.background": "#00000000",
+    "editor.selection.active.foreground": "#00000000",
+    "editor.selection.active.border": "#00000000",
+    "editor.selection.inactive.background": "#00000000"
+  }
+}

@@ -1,0 +1,18 @@
+[
+  {
+    "context": "Workspace",
+    "bindings": {
+      "alt-r": "workspace::ToggleRightDock",
+      "alt-t": "terminal_panel::ToggleFocus",
+      "alt-a": "agent::ToggleFocus",
+      "ctrl-s": "workspace::Save",
+      "alt-i": "editor::ToggleInlayHints"
+    }
+  },
+  {
+    "context": "Editor",
+    "bindings": {
+
+    }
+  }
+]

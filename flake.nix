@@ -36,17 +36,23 @@
     let
       lib = nixpkgs.lib;
       pkgsFor = system: import nixpkgs { inherit system; config.allowUnfree = true; };
-      # For NixOS: use currentSystem when Linux (nixos-rebuild on host), else x86_64-linux so any arch works.
-      systemArchitecture = builtins.currentSystem;
+      # builtins.currentSystem requires --impure; throw with hint if unavailable.
+      currentSystem = if builtins ? currentSystem then builtins.currentSystem else throw ''
+        Builtins.currentSystem is not available (pure evaluation).
+        Run with --impure:
+          sudo darwin-rebuild switch --flake .#laptop --impure
+          sudo nixos-rebuild switch --flake .#nixos --impure
+      '';
       stateVersion = "25.11";
+      dotfilesDir = self + "/dotfiles";
     in {
-      formatter.${systemArchitecture} = (pkgsFor systemArchitecture).nixpkgs-fmt;
+      formatter.${currentSystem} = (pkgsFor currentSystem).nixpkgs-fmt;
 
       # ---------- Darwin (macOS) ----------
       darwinConfigurations."laptop" = nix-darwin.lib.darwinSystem {
-        system = systemArchitecture;
+        system = currentSystem;
         specialArgs = {
-          inherit inputs stateVersion;
+          inherit inputs stateVersion dotfilesDir;
           self = inputs.self;
           nixvim = inputs.nixvim;
         };
@@ -86,15 +92,19 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.vietnamveteran.imports = [ ./home/default.nix ];
+            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir; };
+            home-manager.users.vietnamveteran.imports = [
+              ./home/default.nix
+              ./modules/common/home/dotfiles.nix
+            ];
           }
         ];
       };
 
       # ---------- NixOS (Linux) ----------
       nixosConfigurations.nixos = lib.nixosSystem {
-        system = systemArchitecture;
-        specialArgs = { inherit inputs stateVersion; };
+        system = currentSystem;
+        specialArgs = { inherit inputs stateVersion dotfilesDir; };
         modules = [
           ./profiles/laptop.nix
           ./hosts/nixos/configuration.nix
@@ -105,14 +115,18 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.vietnamveteran.imports = [ ./home/default.nix ];
+            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir; };
+            home-manager.users.vietnamveteran.imports = [
+              ./home/default.nix
+              ./modules/common/home/dotfiles.nix
+            ];
           }
         ];
       };
 
       nixosConfigurations.nixos-vm = lib.nixosSystem {
-        system = systemArchitecture;
-        specialArgs = { inherit inputs stateVersion; };
+        system = currentSystem;
+        specialArgs = { inherit inputs stateVersion dotfilesDir; };
         modules = [
           ./profiles/vm.nix
           ./hosts/nixos-vm/configuration.nix

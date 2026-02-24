@@ -1,4 +1,5 @@
-# Darwin base: system identity, platform, allowUnfree. GC is in profiles/laptop.nix.
+# Darwin base: system identity, allowUnfree. GC is in profiles/laptop.nix.
+# hostPlatform is implied by darwinSystem's system (e.g. aarch64-darwin).
 { config, pkgs, self, ... }:
 
 {
@@ -8,7 +9,6 @@
   system.configurationRevision = self.rev or self.dirtyRev or null;
   system.primaryUser = "vietnamveteran";
   system.stateVersion = 6;
-  nixpkgs.hostPlatform = config.system.build.platform;
 
   # nix-darwin specific GC interval (profile sets gc.automatic/options)
   nix.gc.interval = { Hour = 12; };

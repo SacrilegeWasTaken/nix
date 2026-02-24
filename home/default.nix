@@ -13,4 +13,5 @@
     ../modules/darwin/home/default.nix
     ../modules/nixos/home/default.nix
   ];
+  # dotfiles.nix is imported from the flake (./modules/common/home/dotfiles.nix)
 }
