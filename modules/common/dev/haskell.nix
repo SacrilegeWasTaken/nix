@@ -3,13 +3,13 @@
 
 {
   environment.systemPackages = with pkgs; [
-    haskell.compiler.ghc98
+    ghc
     cabal-install
+    haskell-language-server
     stack
   ];
 
   environment.extraInit = ''
-    [ -d "$HOME/.ghcup/bin" ] && export PATH="$HOME/.ghcup/bin:$PATH"
     [ -d "$HOME/.cabal/bin" ] && export PATH="$HOME/.cabal/bin:$PATH"
   '';
 }

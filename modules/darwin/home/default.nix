@@ -4,7 +4,7 @@
 
 {
   config = lib.mkIf pkgs.stdenv.isDarwin {
-    targets.darwin.copyApps.enable = false;
+    # targets.darwin.copyApps.enable = true;
     # Extend as needed
   };
 }
