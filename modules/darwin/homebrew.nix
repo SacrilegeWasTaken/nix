@@ -31,6 +31,7 @@
       "Xcode" = 497799835;
       "Keynote" = 409183694;
       "Pages" = 409201541;
+      "v2RayTun" = 6476628951;
     };
     onActivation.cleanup = "zap";
     onActivation.autoUpdate = true;
