@@ -90,6 +90,7 @@ in
     # Ensure juliaup is present
     homebrew.brews = [ "juliaup" ];
 
+
     environment.extraInit = ''
       [ -d "$HOME/.juliaup/bin" ] && export PATH="$HOME/.juliaup/bin:$PATH"
     '';

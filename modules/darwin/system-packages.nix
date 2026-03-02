@@ -11,8 +11,6 @@
     cmake
     btop
     tree
-    c3c
-    c3-lsp
     uv
     nodejs
     starship
@@ -24,5 +22,6 @@
     docker
     docker-compose
     zed-editor
+    telegram-desktop
   ];
 }
