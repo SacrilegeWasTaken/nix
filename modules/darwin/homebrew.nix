@@ -4,6 +4,7 @@
 {
   homebrew = {
     enable = true;
+    greedyCasks = true;
     taps = [
       "homebrew/homebrew-core"
       "homebrew/homebrew-cask"
