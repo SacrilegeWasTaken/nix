@@ -8,7 +8,7 @@
       "homebrew/homebrew-core"
       "homebrew/homebrew-cask"
       "nikitabobko/homebrew-tap"
-      "SacrilegeWasTaken/homebrew-tap"
+      "sacrilegewastaken/tap"
     ];
     brews = [
       "mas"
@@ -18,13 +18,13 @@
     casks = [
       "discord"
       "cursor"
-      "olovebar"
       "zen"
       "raycast"
       "docker-desktop"
       "visual-studio-code"
       "warp"
       "nikitabobko/tap/aerospace"
+      "sacrilegewastaken/tap/olovebar"
     ];
     masApps = {
       "Amphetamine" = 937984704;

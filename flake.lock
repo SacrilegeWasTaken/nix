@@ -90,6 +90,22 @@
         "type": "github"
       }
     },
+    "me-tap": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1772807860,
+        "narHash": "sha256-cIWTBgYoNDX4376s7btdad3gukLgI3of+QoBo8zj8sw=",
+        "ref": "refs/heads/main",
+        "rev": "67468ee1b30ccd01618e5072ab604fd0fb1e2f2e",
+        "revCount": 1,
+        "type": "git",
+        "url": "https://codeberg.org/sacrilegewastaken/tap"
+      },
+      "original": {
+        "type": "git",
+        "url": "https://codeberg.org/sacrilegewastaken/tap"
+      }
+    },
     "nikitabobko-tap": {
       "flake": false,
       "locked": {
@@ -183,33 +199,17 @@
         "type": "github"
       }
     },
-    "olovebar-tap": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1768811363,
-        "narHash": "sha256-gS2DZQSGAnAG34BmYNn+apG0GTdxPp3BskUo+yuSJFo=",
-        "owner": "SacrilegeWasTaken",
-        "repo": "homebrew-tap",
-        "rev": "16e928a51390a2e37d6fbeb708e7494411765877",
-        "type": "github"
-      },
-      "original": {
-        "owner": "SacrilegeWasTaken",
-        "repo": "homebrew-tap",
-        "type": "github"
-      }
-    },
     "root": {
       "inputs": {
         "home-manager": "home-manager",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "me-tap": "me-tap",
         "nikitabobko-tap": "nikitabobko-tap",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "nixvim": "nixvim",
-        "olovebar-tap": "olovebar-tap",
         "sops-nix": "sops-nix"
       }
     },

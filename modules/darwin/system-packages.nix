@@ -23,5 +23,6 @@
     docker-compose
     zed-editor
     telegram-desktop
+    clang-tools
   ];
 }

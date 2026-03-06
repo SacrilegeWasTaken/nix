@@ -7,6 +7,10 @@
     cabal-install
     haskell-language-server
     stack
+    pkg-config
+    SDL2
+    glew
+    freetype
   ];
 
   environment.extraInit = ''

@@ -13,7 +13,10 @@ lib.mkIf (dotfilesDir != null) {
     }
     # ---------- Darwin only ----------
     (lib.mkIf pkgs.stdenv.isDarwin {
-      "olovebar/olovebar.toml".source = dotfilesDir + "/darwin/olovebar.toml";
+      "olovebar/olovebar.toml" = {
+        source = dotfilesDir + "/darwin/olovebar.toml";
+        force = true;
+      };
       "aerospace/aerospace.toml".source = dotfilesDir + "/darwin/aerospace.toml";
       "tmux/tmux.conf".source = dotfilesDir + "/darwin/tmux.conf";
     })
