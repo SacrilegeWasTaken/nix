@@ -54,7 +54,7 @@ cd ~/Projects/Darwin
 sudo darwin-rebuild switch --flake .#laptop --impure
 ```
 
-- Uses `system.primaryUser = "vietnamveteran"`.
+- Primary user is set once in `flake.nix` (`username` in `outputs`) and passed to all modules.
 - Home-manager is embedded via `home-manager.darwinModules.home-manager`.
 - Homebrew is managed declaratively (taps, brews, casks, MAS apps).
 - Rust, Haskell, Julia dev tooling is shared via `modules/common/dev/*` and `modules/darwin/dev/julia.nix`.

@@ -1,6 +1,6 @@
 # Rust: rustup from nixpkgs + configurable toolchains/components/targets/cargo-tools.
 # On each rebuild, activation script runs: rustup update + install from config.rust.*.
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, username, ... }:
 
 let
   rustupBin = "${pkgs.rustup}/bin/rustup";
@@ -40,7 +40,7 @@ in
   options.rust = {
     user = lib.mkOption {
       type = lib.types.str;
-      default = "vietnamveteran";
+      default = username;
       description = "User to run rustup (home dir derived from system/darwin or users.users)";
     };
     toolchains = lib.mkOption {

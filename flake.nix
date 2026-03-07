@@ -1,4 +1,5 @@
 {
+  # description: keep in sync with username in outputs
   description = "Unified NixOS + Darwin config for vietnamveteran";
 
   inputs = {
@@ -40,6 +41,7 @@
     }:
     let
       lib = nixpkgs.lib;
+      username = "vietnamveteran";
       pkgsFor = system: import nixpkgs { inherit system; config.allowUnfree = true; };
       # builtins.currentSystem requires --impure; throw with hint if unavailable.
       currentSystem = if builtins ? currentSystem then builtins.currentSystem else throw ''
@@ -57,7 +59,7 @@
       darwinConfigurations."laptop" = nix-darwin.lib.darwinSystem {
         system = currentSystem;
         specialArgs = {
-          inherit inputs stateVersion dotfilesDir;
+          inherit inputs stateVersion dotfilesDir username;
           self = inputs.self;
           nixvim = inputs.nixvim;
         };
@@ -83,7 +85,7 @@
             nix-homebrew = {
               enable = true;
               enableRosetta = true;
-              user = "vietnamveteran";
+              user = username;
               autoMigrate = true;
               mutableTaps = true;
               taps = {
@@ -99,8 +101,8 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "backup";
-            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir; };
-            home-manager.users.vietnamveteran.imports = [
+            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir username; };
+            home-manager.users.${username}.imports = [
               ./home/default.nix
               ./modules/common/home/dotfiles.nix
             ];
@@ -111,7 +113,7 @@
       # ---------- NixOS (Linux) ----------
       nixosConfigurations.nixos = lib.nixosSystem {
         system = currentSystem;
-        specialArgs = { inherit inputs stateVersion dotfilesDir; };
+        specialArgs = { inherit inputs stateVersion dotfilesDir username; };
         modules = [
           ./profiles/laptop.nix
           ./hosts/nixos/configuration.nix
@@ -124,8 +126,8 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "backup";
-            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir; };
-            home-manager.users.vietnamveteran.imports = [
+            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir username; };
+            home-manager.users.${username}.imports = [
               ./home/default.nix
               ./modules/common/home/dotfiles.nix
             ];
@@ -135,7 +137,7 @@
 
       nixosConfigurations.nixos-vm = lib.nixosSystem {
         system = currentSystem;
-        specialArgs = { inherit inputs stateVersion dotfilesDir; };
+        specialArgs = { inherit inputs stateVersion dotfilesDir username; };
         modules = [
           ./profiles/vm.nix
           ./hosts/nixos-vm/configuration.nix

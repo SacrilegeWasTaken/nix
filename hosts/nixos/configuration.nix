@@ -6,7 +6,7 @@
   imports = [
     "/etc/nixos/hardware-configuration.nix"
     ../../modules/nixos/base.nix
-    ../../modules/nixos/users/vietnamveteran.nix
+    ../../modules/nixos/users
     ../../modules/nixos/desktop/gnome.nix
   ];
 
@@ -17,6 +17,4 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   system.stateVersion = stateVersion;
-
-  nixpkgs.config.allowUnfree = true;
 }

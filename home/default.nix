@@ -1,9 +1,9 @@
 # Unified home-manager entry: common modules + platform-specific (Darwin vs NixOS).
-{ config, pkgs, lib, stateVersion, ... }:
+{ config, pkgs, lib, stateVersion, username, ... }:
 
 {
-  home.username = "vietnamveteran";
-  home.homeDirectory = lib.mkForce (if pkgs.stdenv.isDarwin then "/Users/vietnamveteran" else "/home/vietnamveteran");
+  home.username = username;
+  home.homeDirectory = lib.mkForce (if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}");
   home.stateVersion = stateVersion;
   programs.home-manager.enable = true;
 

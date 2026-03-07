@@ -1,7 +1,7 @@
 # NixOS VM host (Parallels, arm64). Uses profile vm (lightweight).
 # Imports modules/nixos/* when they exist (see nixos-hosts todo).
 # Hardware (incl. hardware.parallels.enable for display auto-resize) from /etc/nixos/hardware-configuration.nix.
-{ config, pkgs, stateVersion, ... }:
+{ config, pkgs, stateVersion, username, ... }:
 
 {
   imports = [
@@ -44,7 +44,7 @@
   # Разрешение подстраивается под окно VM через Parallels Tools (prl-tools из /etc/nixos/hardware-configuration.nix).
 
   programs.fish.enable = true;
-  users.users.vietnamveteran = {
+  users.users.${username} = {
     isNormalUser = true;
     extraGroups = [ "wheel" ];
   };

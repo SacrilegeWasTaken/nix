@@ -1,9 +1,9 @@
-{ config, pkgs, ... }:
+{ config, pkgs, username, ... }:
 
 {
-  users.users.vietnamveteran = {
+  users.users.${username} = {
     isNormalUser = true;
-    description = "vietnamveteran";
+    description = username;
     extraGroups = [ "networkmanager" "wheel" ];
     packages = with pkgs; [ ];
   };

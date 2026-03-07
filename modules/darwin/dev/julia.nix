@@ -1,5 +1,5 @@
 # Julia on Darwin only: juliaup via Homebrew + configurable channels/packages.
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, username, ... }:
 
 let
   juliaUser = config.julia.user;
@@ -62,7 +62,7 @@ in
   options.julia = {
     user = lib.mkOption {
       type = lib.types.str;
-      default = "vietnamveteran";
+      default = username;
       description = "User to run juliaup (Darwin only).";
     };
 
