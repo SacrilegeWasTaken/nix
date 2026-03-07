@@ -23,7 +23,6 @@
       "raycast"
       "docker-desktop"
       "visual-studio-code"
-      "warp"
       "nikitabobko/tap/aerospace"
       "sacrilegewastaken/tap/olovebar"
     ];
