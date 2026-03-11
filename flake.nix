@@ -32,11 +32,12 @@
     homebrew-core = { url = "github:homebrew/homebrew-core"; flake = false; };
     homebrew-cask = { url = "github:homebrew/homebrew-cask"; flake = false; };
     nikitabobko-tap = { url = "github:nikitabobko/homebrew-tap"; flake = false; };
-    me-tap = { url = "git+https://codeberg.org/sacrilegewastaken/tap"; flake = false; };
+    sacrilegewastaken-tap = { url = "git+https://codeberg.org/sacrilegewastaken/tap.git"; flake = false; };
+    olovebar = { url = "git+https://codeberg.org/sacrilegewastaken/olovebar.git"; flake = false; };
   };
 
   outputs = inputs @ { self, nix-darwin, nixpkgs, home-manager, nix-homebrew
-    , homebrew-core, homebrew-cask, nikitabobko-tap, me-tap, nixvim
+    , homebrew-core, homebrew-cask, nikitabobko-tap, sacrilegewastaken-tap, nixvim
     , sops-nix, ...
     }:
     let
@@ -87,12 +88,12 @@
               enableRosetta = true;
               user = username;
               autoMigrate = true;
-              mutableTaps = true;
+              mutableTaps = false;
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
                 "nikitabobko/homebrew-tap" = nikitabobko-tap;
-                "sacrilegewastaken/tap" = me-tap;
+                "sacrilegewastaken/homebrew-tap" = sacrilegewastaken-tap;
               };
             };
           }

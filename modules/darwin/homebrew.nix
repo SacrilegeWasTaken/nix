@@ -8,8 +8,14 @@
     taps = [
       "homebrew/homebrew-core"
       "homebrew/homebrew-cask"
-      "nikitabobko/homebrew-tap"
-      "sacrilegewastaken/tap"
+      {
+        name = "nikitabobko/tap";
+        clone_target = "https://github.com/nikitabobko/homebrew-tap.git";
+      }
+      {
+        name = "sacrilegewastaken/homebrew-tap";
+        clone_target = "https://codeberg.org/sacrilegewastaken/tap.git";
+      }
     ];
     brews = [
       "mas"
@@ -23,8 +29,8 @@
       "raycast"
       "docker-desktop"
       "visual-studio-code"
-      "nikitabobko/tap/aerospace"
-      "sacrilegewastaken/tap/olovebar"
+      "aerospace"
+      "olovebar"
     ];
     masApps = {
       "Amphetamine" = 937984704;
