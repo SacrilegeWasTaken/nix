@@ -217,11 +217,11 @@
     "sacrilegewastaken-tap": {
       "flake": false,
       "locked": {
-        "lastModified": 1773307609,
-        "narHash": "sha256-+6QtZ2JWMISYad/oYsqF3LiVyisM/Snv5iI8MDFLU3Q=",
+        "lastModified": 1773331582,
+        "narHash": "sha256-3HUn72UFrMfC6ZnEZotxKlceVgLL9udR4gqW1AApm2Y=",
         "ref": "refs/heads/main",
-        "rev": "68a6fd4daf1b354629edfb1ca7ad567fa3de72e4",
-        "revCount": 16,
+        "rev": "1ab6238f51910b5ca5f8c69872d00508964a8a6e",
+        "revCount": 18,
         "type": "git",
         "url": "https://codeberg.org/sacrilegewastaken/tap.git"
       },
