@@ -30,6 +30,7 @@
       "docker-desktop"
       "visual-studio-code"
       "aerospace"
+      "antigravity"
       "olovebar"
     ];
     masApps = {
