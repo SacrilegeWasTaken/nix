@@ -25,3 +25,4 @@
     claude-code
   ];
 }
+pin
