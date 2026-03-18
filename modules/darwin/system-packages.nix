@@ -15,14 +15,13 @@
     nodejs
     starship
     hexyl
-    tmux
     obsidian
     nil
     nixd
     docker
     docker-compose
-    zed-editor
     telegram-desktop
     clang-tools
+    claude-code
   ];
 }
