@@ -33,6 +33,7 @@
       { mode = "n"; key = "<leader>fg"; action = "<cmd>Telescope git_files<cr>"; options.desc = "Git files"; }
       { mode = "n"; key = "<leader>fb"; action = "<cmd>Telescope buffers<cr>"; options.desc = "Buffers"; }
       { mode = "n"; key = "<leader>fh"; action = "<cmd>Telescope find_files hidden=true<cr>"; options.desc = "Find hidden files"; }
+      { mode = "n"; key = "<leader>gl"; action = "<cmd>Telescope diagnostics<cr>"; options.desc = "Diagnostics list"; }
     ];
 
     extraPlugins = [
