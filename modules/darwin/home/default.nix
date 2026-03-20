@@ -4,6 +4,39 @@
 
 {
   config = lib.mkIf pkgs.stdenv.isDarwin {
+    programs.alacritty = {
+      enable = true;
+      settings = {
+        window = {
+          opacity = 0.88;
+          padding = {
+            x = 8;
+            y = 8;
+          };
+          decorations = "Buttonless";
+          option_as_alt = "Both";
+        };
+
+        font = {
+          normal = {
+            family = "JetBrainsMono Nerd Font Mono";
+            style = "Regular";
+          };
+          bold = {
+            family = "JetBrainsMono Nerd Font Mono";
+            style = "Bold";
+          };
+          italic = {
+            family = "JetBrainsMono Nerd Font Mono";
+            style = "Italic";
+          };
+          size = 14.0;
+        };
+
+        scrolling.history = 50000;
+      };
+    };
+
     # targets.darwin.copyApps.enable = true;
     # Extend as needed
   };

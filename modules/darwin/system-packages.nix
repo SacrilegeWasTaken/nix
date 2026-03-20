@@ -23,6 +23,6 @@
     telegram-desktop
     clang-tools
     claude-code
+    alacritty
   ];
 }
-pin
