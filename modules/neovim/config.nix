@@ -38,6 +38,7 @@
     extraPlugins = [
       pkgs.vimPlugins.ultimate-autopair-nvim
       pkgs.vimPlugins.smear-cursor-nvim
+      pkgs.vimPlugins.toggleterm-nvim
     ];
 
     extraConfigLua = ''
@@ -53,6 +54,13 @@
         time_interval = 7,
         legacy_computing_symbols_support = true,
         hide_target_hack = true,
+      })
+      require("toggleterm").setup({
+        open_mapping = [[<leader>ft]],
+        direction = "float",
+        float_opts = {
+          border = "rounded",
+        },
       })
 
       vim.api.nvim_create_autocmd('LspAttach', {
@@ -102,7 +110,11 @@
             installCargo = false;
             installRustc = false;
           };
-          zls.enable = true;
+          zls = {
+            enable = true;
+            package = pkgs.zls;
+            cmd = [ "${pkgs.zls}/bin/zls" ];
+          };
           hls = {
             enable = true;
             installGhc = false;
