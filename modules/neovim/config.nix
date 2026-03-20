@@ -19,7 +19,7 @@
       guifont = "JetBrainsMono Nerd Font:h12";
       scrolloff = 8;
       updatetime = 50;
-      colorcolumn = "80";
+      colorcolumn = "";
     };
 
     globals.mapleader = " ";
@@ -34,6 +34,16 @@
       { mode = "n"; key = "<leader>fb"; action = "<cmd>Telescope buffers<cr>"; options.desc = "Buffers"; }
       { mode = "n"; key = "<leader>fh"; action = "<cmd>Telescope find_files hidden=true<cr>"; options.desc = "Find hidden files"; }
       { mode = "n"; key = "<leader>gl"; action = "<cmd>Telescope diagnostics<cr>"; options.desc = "Diagnostics list"; }
+      { mode = "n"; key = "<leader>tf"; action = "<cmd>rightbelow vsplit<cr>"; options.desc = "Vertical split"; }
+      { mode = "n"; key = "<leader>te"; action = "<cmd>rightbelow vsplit | terminal<cr>"; options.desc = "Vertical split / Terminal"; }
+      { mode = "n"; key = "<C-h>"; action = "<C-w>h"; options.desc = "Focus window left"; }
+      { mode = "n"; key = "<C-j>"; action = "<C-w>j"; options.desc = "Focus window down"; }
+      { mode = "n"; key = "<C-k>"; action = "<C-w>k"; options.desc = "Focus window up"; }
+      { mode = "n"; key = "<C-l>"; action = "<C-w>l"; options.desc = "Focus window right"; }
+      { mode = "n"; key = "<C-->"; action = "<C-w><lt>"; options.desc = "Narrower split (no Shift)"; }
+      { mode = "n"; key = "<C-=>"; action = "<C-w>>"; options.desc = "Wider split (no Shift)"; }
+      { mode = "v"; key = "<C-c>"; action = "\"+y"; options.desc = "Copy selection to system clipboard"; }
+      { mode = "n"; key = "<C-c>"; action = "\"+yy"; options.desc = "Copy line to system clipboard"; }
     ];
 
     extraPlugins = [
@@ -92,6 +102,7 @@
             "zig"
             "rust"
             "haskell"
+            "swift"
             "vim"
             "vimdoc"
             "query"
@@ -123,6 +134,11 @@
           clangd = {
             enable = true;
             package = pkgs.clang-tools;
+          };
+          sourcekit = {
+            enable = true;
+            package = pkgs.sourcekit-lsp;
+            cmd = [ "${pkgs.sourcekit-lsp}/bin/sourcekit-lsp" ];
           };
         };
       };
