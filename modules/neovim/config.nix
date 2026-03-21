@@ -83,9 +83,9 @@ in
       { mode = "n"; key = "<leader>fh"; action = "<cmd>Telescope find_files hidden=true<cr>"; options.desc = "Find hidden files"; }
       { mode = "n"; key = "<leader>td"; action = "<cmd>Telescope diagnostics<cr>"; options.desc = "Diagnostics list"; }
       { mode = "n"; key = "<leader>tf"; action = "<cmd>rightbelow vsplit<cr>"; options.desc = "Vertical split"; }
-      { mode = "n"; key = "<leader>te"; action = "<cmd>rightbelow vsplit | terminal<cr>"; options.desc = "Vertical split / Terminal"; }
       { mode = "n"; key = "<leader>tF"; action = "<cmd>leftabove vsplit<cr>"; options.desc = "Vertical split left"; }
-      { mode = "n"; key = "<leader>tE"; action = "<cmd>leftabove split<cr>"; options.desc = "Horizontal split up"; }
+      { mode = "n"; key = "<leader>te"; action = "<cmd>rightbelow vsplit | terminal<cr>"; options.desc = "Vertical split / Terminal"; }
+      { mode = "n"; key = "<leader>tE"; action = "<cmd>leftabove split | terminal<cr>"; options.desc = "Horizontal split / Terminal"; }
       { mode = "n"; key = "<C-h>"; action = "<C-w>h"; options.desc = "Focus window left"; }
       { mode = "n"; key = "<C-j>"; action = "<C-w>j"; options.desc = "Focus window down"; }
       { mode = "n"; key = "<C-k>"; action = "<C-w>k"; options.desc = "Focus window up"; }
