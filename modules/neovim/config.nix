@@ -81,7 +81,7 @@ in
       { mode = "n"; key = "<leader>fg"; action = "<cmd>Telescope git_files<cr>"; options.desc = "Git files"; }
       { mode = "n"; key = "<leader>fb"; action = "<cmd>Telescope buffers<cr>"; options.desc = "Buffers"; }
       { mode = "n"; key = "<leader>fh"; action = "<cmd>Telescope find_files hidden=true<cr>"; options.desc = "Find hidden files"; }
-      { mode = "n"; key = "<leader>gl"; action = "<cmd>Telescope diagnostics<cr>"; options.desc = "Diagnostics list"; }
+      { mode = "n"; key = "<leader>td"; action = "<cmd>Telescope diagnostics<cr>"; options.desc = "Diagnostics list"; }
       { mode = "n"; key = "<leader>tf"; action = "<cmd>rightbelow vsplit<cr>"; options.desc = "Vertical split"; }
       { mode = "n"; key = "<leader>te"; action = "<cmd>rightbelow vsplit | terminal<cr>"; options.desc = "Vertical split / Terminal"; }
       { mode = "n"; key = "<leader>tF"; action = "<cmd>leftabove vsplit<cr>"; options.desc = "Vertical split left"; }
