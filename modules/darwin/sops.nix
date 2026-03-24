@@ -16,7 +16,9 @@ in
     age.keyFile = "/Users/${username}/.config/sops/age/keys.txt";
 
     secrets = {
-      tavily-api-key = { };
+      tavily-api-key = {
+        owner = username;
+      };
     };
   };
 }
