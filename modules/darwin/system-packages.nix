@@ -5,6 +5,7 @@
   environment.systemPackages = with pkgs; [
     git
     git-lfs
+    pipx
     ripgrep
     zig
     zls
@@ -25,5 +26,7 @@
     clang-tools
     claude-code
     alacritty
+    sops
+    age
   ];
 }

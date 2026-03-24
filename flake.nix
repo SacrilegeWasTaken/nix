@@ -81,6 +81,7 @@
           ./modules/apps/olovebar.nix
           ./modules/neovim/nixvim.nix
           sops-nix.darwinModules.sops
+          ./modules/darwin/sops.nix
           nix-homebrew.darwinModules.nix-homebrew
           {
             nix-homebrew = {

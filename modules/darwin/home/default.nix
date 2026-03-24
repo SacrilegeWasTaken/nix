@@ -3,6 +3,8 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports = [ ./claude-code.nix ];
+
   config = lib.mkIf pkgs.stdenv.isDarwin {
     programs.alacritty = {
       enable = true;

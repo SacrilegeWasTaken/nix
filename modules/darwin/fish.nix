@@ -5,6 +5,7 @@
   programs.fish = {
     shellInit = ''
       set -g fish_greeting ""
+      fish_add_path "$HOME/.local/bin"
       set -g fish_color_command brgreen --bold
       set -g fish_color_error brred --bold
       if command -v docker >/dev/null 2>&1
@@ -29,6 +30,10 @@
         set -gx DOCKER_HOST "unix:///var/run/docker.sock"
       end
       set -gx CARGO_HOME "$HOME/.cargo"
+      # MCP API keys decrypted by sops-nix at activation time
+      if test -f /run/secrets/tavily-api-key
+        set -gx TAVILY_API_KEY (cat /run/secrets/tavily-api-key)
+      end
     '';
   };
 

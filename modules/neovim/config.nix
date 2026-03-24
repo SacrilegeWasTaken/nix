@@ -270,7 +270,15 @@ in
     };
     colorschemes.tokyonight = {
       enable = true;
-      settings.style = "night";
+      settings = {
+        style = "night";
+        # Фон редактора «пустой» — виден полупрозрачный терминал (Alacritty и т.п.)
+        transparent = true;
+        styles = {
+          sidebars = "transparent";
+          floats = "transparent";
+        };
+      };
     };
   };
 }
