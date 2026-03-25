@@ -41,7 +41,7 @@ let
         "serena"
         "start-mcp-server"
         "--context"
-        "ide-assistant"
+        "claude-code"
       ];
       env = { };
     };
@@ -231,4 +231,19 @@ lib.mkIf pkgs.stdenv.isDarwin {
     airisSetupScript
     superclaudeSetupScript
   ];
+
+  home.activation.setupSerenaConfig = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    SERENA_DIR="$HOME/.serena"
+    SERENA_CFG="$SERENA_DIR/serena_config.yml"
+    mkdir -p "$SERENA_DIR"
+    if [ ! -f "$SERENA_CFG" ] || [ -L "$SERENA_CFG" ]; then
+      rm -f "$SERENA_CFG"
+      cat > "$SERENA_CFG" <<'ENDCFG'
+language_backend: LSP
+web_dashboard: false
+web_dashboard_open_on_launch: false
+projects: []
+ENDCFG
+    fi
+  '';
 }
