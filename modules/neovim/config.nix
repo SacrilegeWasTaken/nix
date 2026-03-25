@@ -29,8 +29,12 @@ in
       termguicolors = true;
       guifont = "JetBrainsMono Nerd Font:h12";
       scrolloff = 8;
-      updatetime = 50;
+      updatetime = 250;
       colorcolumn = "";
+      # Иначе Esc и CSI (Ctrl+стрелки) разъезжаются — в буфер попадает [1;5D…
+      timeout = true;
+      ttimeout = true;
+      ttimeoutlen = 300;
     };
 
     globals.mapleader = " ";
@@ -52,6 +56,22 @@ in
       pcall(function()
         require("langmapper").automapping({ global = true, buffer = true })
       end)
+
+      -- Ctrl+стрелки → переключение окон. Через original_set, минуя langmapper.
+      do
+        local okm = require("langmapper").original_set
+        local keys = { "<C-Left>", "<C-Right>", "<C-Up>", "<C-Down>" }
+        local dirs = { "h", "l", "k", "j" }
+        for i = 1, 4 do
+          local d = dirs[i]
+          local rhs = function()
+            vim.cmd("wincmd " .. d)
+          end
+          okm({ "n", "v", "x" }, keys[i], rhs, { noremap = true })
+          okm("i", keys[i], rhs, { noremap = true })
+          okm("t", keys[i], rhs, { noremap = true })
+        end
+      end
     '';
 
     autoCmd = [
@@ -175,6 +195,24 @@ in
         float_opts = {
           border = "rounded",
         },
+      })
+
+      vim.diagnostic.config({
+        virtual_text = false,
+        underline = true,
+        signs = true,
+        severity_sort = true,
+        float = {
+          border = "rounded",
+          source = "if_many",
+          focusable = false,
+        },
+      })
+
+      vim.api.nvim_create_autocmd("CursorHold", {
+        callback = function()
+          vim.diagnostic.open_float(nil, { scope = "cursor" })
+        end,
       })
 
       vim.api.nvim_create_autocmd('LspAttach', {

@@ -36,14 +36,8 @@
         };
 
         scrolling.history = 50000;
-
-        # Явно шлём xterm CSI для Ctrl+стрелок — Neovim в TUI понимает это как <C-Left> и т.д.
-        keyboard.bindings = [
-          { key = "Left"; mods = "Control"; chars = "\u001b[1;5D"; }
-          { key = "Right"; mods = "Control"; chars = "\u001b[1;5C"; }
-          { key = "Up"; mods = "Control"; chars = "\u001b[1;5A"; }
-          { key = "Down"; mods = "Control"; chars = "\u001b[1;5B"; }
-        ];
+        # Ctrl+стрелки: Alacritty шлёт xterm CSI по умолчанию (\e[1;5D и т.д.).
+        # Маппинг <C-Left> → wincmd — в Neovim через langmapper.original_set.
       };
     };
 
