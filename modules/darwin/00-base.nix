@@ -16,15 +16,30 @@
   system.defaults.CustomUserPreferences = {
     "com.apple.symbolichotkeys" = {
       AppleSymbolicHotKeys = {
-        # Mission Control (часто Ctrl+↑), окна приложений (часто Ctrl+↓), «Показать рабочий стол»
+        # Mission Control (Ctrl+↑)
         "32" = { enabled = false; };
+        "33" = { enabled = false; };
+        # Application Windows (Ctrl+↓)
         "34" = { enabled = false; };
+        "35" = { enabled = false; };
+        # Show Desktop (F11)
         "36" = { enabled = false; };
-        # Переход между столами (часто Ctrl+← / Ctrl+→)
+        "37" = { enabled = false; };
+        # Move left/right a space (Ctrl+←/→)
         "79" = { enabled = false; };
         "80" = { enabled = false; };
         "81" = { enabled = false; };
         "82" = { enabled = false; };
+        # Switch to Desktop 1–9 (Ctrl+1…9)
+        "118" = { enabled = false; };
+        "119" = { enabled = false; };
+        "120" = { enabled = false; };
+        "121" = { enabled = false; };
+        "122" = { enabled = false; };
+        "123" = { enabled = false; };
+        "124" = { enabled = false; };
+        "125" = { enabled = false; };
+        "126" = { enabled = false; };
       };
     };
   };
