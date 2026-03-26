@@ -212,7 +212,58 @@ in
 
       vim.api.nvim_create_autocmd("CursorHold", {
         callback = function()
-          vim.diagnostic.open_float(nil, { scope = "cursor" })
+          local bufnr = vim.api.nvim_get_current_buf()
+          local cursor = vim.api.nvim_win_get_cursor(0)
+          local row = cursor[1] - 1
+          local col = cursor[2]
+
+          local diags = vim.diagnostic.get(bufnr, { lnum = row })
+          local diag_lines = {}
+          local icons = { [1] = " ", [2] = " ", [3] = " ", [4] = " " }
+          for _, d in ipairs(diags) do
+            local icon = icons[d.severity] or ""
+            table.insert(diag_lines, icon .. d.message)
+          end
+
+          local clients = vim.lsp.get_clients({ bufnr = bufnr })
+          if #clients == 0 then
+            if #diag_lines > 0 then
+              vim.diagnostic.open_float(nil, { scope = "cursor" })
+            end
+            return
+          end
+
+          local params = vim.lsp.util.make_position_params(0, clients[1].offset_encoding)
+          vim.lsp.buf_request(bufnr, "textDocument/hover", params, function(err, result)
+            if not vim.api.nvim_buf_is_valid(bufnr) then return end
+            if vim.api.nvim_get_current_buf() ~= bufnr then return end
+
+            local lines = {}
+            if #diag_lines > 0 then
+              for _, l in ipairs(diag_lines) do
+                table.insert(lines, l)
+              end
+            end
+
+            if not err and result and result.contents then
+              local hover = vim.lsp.util.convert_input_to_markdown_lines(result.contents)
+              hover = vim.lsp.util.trim_empty_lines(hover)
+              if #hover > 0 then
+                if #lines > 0 then
+                  table.insert(lines, "---")
+                end
+                vim.list_extend(lines, hover)
+              end
+            end
+
+            if #lines > 0 then
+              local fbuf, fwin = vim.lsp.util.open_floating_preview(lines, "markdown", {
+                border = "rounded",
+                focusable = false,
+                close_events = { "CursorMoved", "InsertEnter", "BufLeave" },
+              })
+            end
+          end)
         end,
       })
 
@@ -220,7 +271,7 @@ in
         desc = 'LSP actions',
         callback = function(event)
           local opts = { buffer = event.buf }
-          vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+          vim.keymap.set('n', 'gh', vim.lsp.buf.hover, opts)
           vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
           vim.keymap.set('n', 'gD', vim.lsp.buf.declaration, opts)
           vim.keymap.set('n', 'gi', vim.lsp.buf.implementation, opts)
