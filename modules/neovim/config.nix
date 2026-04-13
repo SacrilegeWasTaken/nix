@@ -124,6 +124,8 @@ in
       pkgs.vimPlugins.ultimate-autopair-nvim
       pkgs.vimPlugins.smear-cursor-nvim
       pkgs.vimPlugins.toggleterm-nvim
+      # vim.ui.select → Telescope (замена удалённого builtin.lsp_code_actions)
+      pkgs.vimPlugins.telescope-ui-select-nvim
     ];
 
     extraConfigLua = ''
@@ -198,6 +200,22 @@ in
         },
       })
 
+      vim.schedule(function()
+        pcall(function()
+          require("telescope").setup({
+            extensions = {
+              ["ui-select"] = {
+                require("telescope.themes").get_dropdown({
+                  previewer = false,
+                  winblend = 10,
+                }),
+              },
+            },
+          })
+          require("telescope").load_extension("ui-select")
+        end)
+      end)
+
       vim.diagnostic.config({
         virtual_text = false,
         underline = true,
@@ -216,9 +234,16 @@ in
         end,
       })
 
+      if vim.fn.has("nvim-0.11") == 1 then
+        vim.o.winborder = "rounded"
+      end
+
       vim.api.nvim_create_autocmd('LspAttach', {
         desc = 'LSP actions',
         callback = function(event)
+          if vim.lsp.inlay_hint then
+            vim.lsp.inlay_hint.enable(true, { bufnr = event.buf })
+          end
           local opts = { buffer = event.buf }
           vim.keymap.set('n', 'gh', function()
             vim.lsp.buf.hover({ border = "rounded" })
@@ -231,7 +256,10 @@ in
             vim.lsp.buf.signature_help({ border = "rounded" })
           end, opts)
           vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
-          vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
+          -- Code actions через vim.ui.select → telescope-ui-select (см. telescope.schedule выше)
+          vim.keymap.set({ 'n', 'v' }, '<leader>ca', function()
+            vim.lsp.buf.code_action({ border = "rounded" })
+          end, vim.tbl_extend('force', opts, { desc = 'LSP code actions (quick fixes)' }))
           vim.keymap.set('n', '<leader>k', vim.diagnostic.open_float, opts)
         end,
       })
@@ -267,6 +295,23 @@ in
             enable = true;
             installCargo = false;
             installRustc = false;
+            settings = {
+              cargo = {
+                allFeatures = true;
+                buildScripts.enable = true;
+              };
+              check = {
+                command = "clippy";
+              };
+              procMacro = {
+                enable = true;
+              };
+              diagnostics = {
+                experimental = {
+                  enable = true;
+                };
+              };
+            };
           };
           zls = {
             enable = true;
