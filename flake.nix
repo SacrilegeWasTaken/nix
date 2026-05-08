@@ -21,7 +21,6 @@
 
     nixvim = {
       url = "github:nix-community/nixvim";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     sops-nix = {
@@ -79,6 +78,7 @@
           ./modules/darwin/dev/julia.nix
           ./modules/apps/vscode.nix
           ./modules/apps/olovebar.nix
+          nixvim.nixDarwinModules.nixvim
           ./modules/neovim/nixvim.nix
           sops-nix.darwinModules.sops
           ./modules/darwin/sops.nix
@@ -89,7 +89,7 @@
               enableRosetta = true;
               user = username;
               autoMigrate = true;
-              mutableTaps = false;
+              mutableTaps = false; # change if something is fucked up
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
