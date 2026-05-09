@@ -121,6 +121,7 @@ in
       pkgs.vimPlugins.langmapper-nvim
       pkgs.vimPlugins.plenary-nvim
       pkgs.vimPlugins.claude-code-nvim
+      pkgs.vimPlugins.vim-surround
       pkgs.vimPlugins.ultimate-autopair-nvim
       pkgs.vimPlugins.smear-cursor-nvim
       pkgs.vimPlugins.toggleterm-nvim

@@ -30,4 +30,7 @@ lib.mkIf (dotfilesDir != null) {
   home.file.".tmux.conf".source = dotfilesDir + (
     if pkgs.stdenv.isDarwin then "/darwin/tmux.conf" else "/nixos/tmux.conf"
   );
+
+  # Claude Code: глобальный контекст (см. dotfiles/common/claude/CLAUDE.md)
+  home.file.".claude/CLAUDE.md".source = dotfilesDir + "/common/claude/CLAUDE.md";
 }
