@@ -39,13 +39,10 @@ PY
       "xcodes"
     ];
     casks = [
-      "cursor"
       "zen"
       "raycast"
       "docker-desktop"
-      "visual-studio-code"
       "aerospace"
-      "antigravity"
       "olovebar"
     ];
     masApps = {

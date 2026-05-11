@@ -28,5 +28,6 @@
     alacritty
     sops
     age
+    ffmpeg
   ];
 }
