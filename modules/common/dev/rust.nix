@@ -50,7 +50,7 @@ in
     };
     components = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "rust-src" "rustfmt" "clippy" ];
+      default = [ "rust-src" "rustfmt" "clippy" "rust-analyzer" ];
       description = "Rust components to install";
     };
     targets = lib.mkOption {
