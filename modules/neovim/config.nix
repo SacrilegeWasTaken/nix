@@ -73,6 +73,23 @@ in
           okm("t", keys[i], rhs, { noremap = true })
         end
       end
+
+      -- vim-surround: кириллические дубликаты <Plug>-маппингов.
+      -- langmapper.automapping не всегда корректно дублирует <Plug>
+      -- в visual mode (особенно xmap-only), поэтому ставим вручную.
+      do
+        local okm = require("langmapper").original_set
+        -- Visual: Ы → S (обернуть выделение)
+        okm("x", "Ы", "<Plug>VSurround",  { remap = true, silent = true })
+        okm("x", "ПЫ", "<Plug>VgSurround", { remap = true, silent = true })
+        -- Normal: вы → ds, сы → cs, ны → ys, нн → yss
+        okm("n", "вы",  "<Plug>Dsurround",     { remap = true, silent = true })
+        okm("n", "сы",  "<Plug>Csurround",     { remap = true, silent = true })
+        okm("n", "ны",  "<Plug>Ysurround",     { remap = true, silent = true })
+        okm("n", "нН",  "<Plug>YSurround",     { remap = true, silent = true })
+        okm("n", "нн",  "<Plug>Yssurround",    { remap = true, silent = true })
+        okm("n", "ННН", "<Plug>YSsurround",    { remap = true, silent = true })
+      end
     '';
 
     autoCmd = [
