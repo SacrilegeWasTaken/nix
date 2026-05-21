@@ -95,7 +95,7 @@ in
     autoCmd = [
       {
         event = "FileType";
-        pattern = [ "c" "nix" "yaml" "json" "html" "css" "javascript" "typescript" "lua" "vim" "vimdoc" "query" ];
+        pattern = [ "c" "nix" "yaml" "json" "toml" "html" "css" "javascript" "typescript" "lua" "vim" "vimdoc" "query" ];
         command = "setlocal tabstop=2 shiftwidth=2 expandtab";
       }
       {
@@ -280,6 +280,60 @@ in
             vim.lsp.buf.code_action({ border = "rounded" })
           end, vim.tbl_extend('force', opts, { desc = 'LSP code actions (quick fixes)' }))
           vim.keymap.set('n', '<leader>k', vim.diagnostic.open_float, opts)
+          vim.keymap.set('n', '<leader>th', function()
+            local filter = { bufnr = event.buf }
+            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled(filter), filter)
+          end, vim.tbl_extend('force', opts, { desc = 'Toggle inlay hints' }))
+        end,
+      })
+
+      -- Rust: специальные :RustLsp экшены через rustaceanvim.
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = "rust",
+        callback = function(args)
+          local opts = { buffer = args.buf, silent = true }
+          vim.keymap.set("n", "<leader>Rr", function() vim.cmd.RustLsp("runnables") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: runnables" }))
+          vim.keymap.set("n", "<leader>Rd", function() vim.cmd.RustLsp("debuggables") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: debuggables" }))
+          vim.keymap.set("n", "<leader>Rm", function() vim.cmd.RustLsp("expandMacro") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: expand macro" }))
+          vim.keymap.set("n", "<leader>Re", function() vim.cmd.RustLsp("explainError") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: explain error" }))
+          vim.keymap.set("n", "<leader>Ro", function() vim.cmd.RustLsp("openCargo") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: open Cargo.toml" }))
+          vim.keymap.set("n", "<leader>Rp", function() vim.cmd.RustLsp("parentModule") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: parent module" }))
+          vim.keymap.set("n", "<leader>Rh", function() vim.cmd.RustLsp({ "hover", "actions" }) end,
+            vim.tbl_extend("force", opts, { desc = "Rust: hover actions" }))
+          vim.keymap.set("n", "<leader>RR", function() vim.cmd.RustLsp("renderDiagnostic") end,
+            vim.tbl_extend("force", opts, { desc = "Rust: render diagnostic" }))
+        end,
+      })
+
+      -- Format-on-save для Rust через rust-analyzer/rustfmt.
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        pattern = "*.rs",
+        callback = function()
+          vim.lsp.buf.format({ async = false, timeout_ms = 3000 })
+        end,
+      })
+
+      -- crates.nvim: подсказки и экшены в Cargo.toml.
+      vim.api.nvim_create_autocmd("BufRead", {
+        pattern = "Cargo.toml",
+        callback = function(args)
+          local opts = { buffer = args.buf, silent = true }
+          vim.keymap.set("n", "<leader>Ct", function() require("crates").toggle() end,
+            vim.tbl_extend("force", opts, { desc = "Crates: toggle UI" }))
+          vim.keymap.set("n", "<leader>Cu", function() require("crates").update_crate() end,
+            vim.tbl_extend("force", opts, { desc = "Crates: update crate" }))
+          vim.keymap.set("n", "<leader>CU", function() require("crates").upgrade_all_crates() end,
+            vim.tbl_extend("force", opts, { desc = "Crates: upgrade all" }))
+          vim.keymap.set("n", "<leader>Cv", function() require("crates").show_versions_popup() end,
+            vim.tbl_extend("force", opts, { desc = "Crates: versions popup" }))
+          vim.keymap.set("n", "<leader>Cf", function() require("crates").show_features_popup() end,
+            vim.tbl_extend("force", opts, { desc = "Crates: features popup" }))
         end,
       })
     '';
@@ -294,6 +348,8 @@ in
             "python"
             "zig"
             "rust"
+            "ron"
+            "toml"
             "haskell"
             "swift"
             "vim"
@@ -310,28 +366,7 @@ in
         enable = true;
         servers = {
           nixd.enable = true;
-          rust_analyzer = {
-            enable = true;
-            installCargo = false;
-            installRustc = false;
-            settings = {
-              cargo = {
-                allFeatures = true;
-                buildScripts.enable = true;
-              };
-              check = {
-                command = "clippy";
-              };
-              procMacro = {
-                enable = true;
-              };
-              diagnostics = {
-                experimental = {
-                  enable = true;
-                };
-              };
-            };
-          };
+          taplo.enable = true;
           zls = {
             enable = true;
             package = pkgs.zls;
@@ -352,6 +387,109 @@ in
           };
         };
       };
+
+      rustaceanvim = {
+        enable = true;
+        settings = {
+          server = {
+            default_settings = {
+              rust-analyzer = {
+                cargo = {
+                  allFeatures = true;
+                  loadOutDirsFromCheck = true;
+                  buildScripts.enable = true;
+                };
+                check.command = "clippy";
+                checkOnSave = true;
+                procMacro = {
+                  enable = true;
+                  ignored.leptos_macro = [ "server" ];
+                };
+                diagnostics.experimental.enable = true;
+                imports = {
+                  granularity.group = "module";
+                  prefix = "self";
+                };
+                inlayHints = {
+                  bindingModeHints.enable = false;
+                  chainingHints.enable = true;
+                  closingBraceHints = {
+                    enable = true;
+                    minLines = 25;
+                  };
+                  closureReturnTypeHints.enable = "never";
+                  lifetimeElisionHints = {
+                    enable = "skip_trivial";
+                    useParameterNames = false;
+                  };
+                  maxLength = 25;
+                  parameterHints.enable = true;
+                  reborrowHints.enable = "never";
+                  renderColons = true;
+                  typeHints = {
+                    enable = true;
+                    hideClosureInitialization = false;
+                    hideNamedConstructor = false;
+                  };
+                };
+                lens = {
+                  enable = true;
+                  references = {
+                    adt.enable = true;
+                    enumVariant.enable = true;
+                    method.enable = true;
+                    trait.enable = true;
+                  };
+                };
+                completion = {
+                  callable.snippets = "fill_arguments";
+                  postfix.enable = true;
+                };
+                hover.actions = {
+                  enable = true;
+                  references.enable = true;
+                };
+              };
+            };
+          };
+          tools = {
+            float_win_config = {
+              border = "rounded";
+            };
+            hover_actions = {
+              replace_builtin_hover = false;
+            };
+          };
+        };
+      };
+
+      crates = {
+        enable = true;
+        settings = {
+          autoload = true;
+          autoupdate = true;
+          autoupdate_throttle = 250;
+          loading_indicator = true;
+          search_indicator = true;
+          smart_insert = true;
+          enable_update_available_warning = true;
+          completion = {
+            cmp.enabled = true;
+            crates = {
+              enabled = true;
+              max_results = 8;
+              min_chars = 3;
+            };
+          };
+          lsp = {
+            enabled = true;
+            actions = true;
+            completion = true;
+            hover = true;
+          };
+        };
+      };
+
       telescope.enable = true;
       cmp = {
         enable = true;
@@ -365,6 +503,7 @@ in
           };
           sources = [
             { name = "nvim_lsp"; }
+            { name = "crates"; }
             { name = "path"; }
             { name = "buffer"; }
           ];
