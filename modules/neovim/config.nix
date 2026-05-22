@@ -401,6 +401,9 @@ in
                 };
                 check.command = "clippy";
                 checkOnSave = true;
+                rustfmt = {
+                  overrideCommand = [ "rustup" "run" "nightly" "rustfmt" ];
+                };
                 procMacro = {
                   enable = true;
                   ignored.leptos_macro = [ "server" ];
