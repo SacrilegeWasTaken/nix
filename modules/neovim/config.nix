@@ -477,7 +477,6 @@ in
           smart_insert = true;
           enable_update_available_warning = true;
           completion = {
-            cmp.enabled = true;
             crates = {
               enabled = true;
               max_results = 8;
@@ -506,7 +505,6 @@ in
           };
           sources = [
             { name = "nvim_lsp"; }
-            { name = "crates"; }
             { name = "path"; }
             { name = "buffer"; }
           ];
