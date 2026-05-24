@@ -527,15 +527,26 @@ in
       nvim-tree.enable = true;
       web-devicons.enable = true;
     };
-    colorschemes.tokyonight = {
+    colorschemes.gruvbox = {
       enable = true;
       settings = {
-        style = "night";
-        transparent = true;
-        styles = {
-          sidebars = "transparent";
-          floats = "transparent";
+        contrast = "hard";
+        transparent_mode = true;
+        terminal_colors = true;
+        bold = true;
+        undercurl = true;
+        underline = true;
+        italic = {
+          strings = false;
+          emphasis = true;
+          comments = true;
+          operators = false;
+          folds = true;
         };
+        invert_selection = false;
+        invert_signs = false;
+        invert_tabline = false;
+        dim_inactive = false;
       };
     };
   };
