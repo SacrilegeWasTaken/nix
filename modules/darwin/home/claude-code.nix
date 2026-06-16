@@ -1,5 +1,5 @@
 # Declarative MCP server configuration for Claude Code + SuperClaude.
-# Servers: context7, sequential-thinking, playwright, serena, tavily.
+# Servers: context7, sequential-thinking, playwright, serena, tavily, lldb.
 #
 # Two modes:
 #   1. Direct (default) — activation merges server entries into ~/.claude.json.
@@ -9,9 +9,24 @@
 #
 # Tavily requires TAVILY_API_KEY.  Free key: https://app.tavily.com
 # Set it in fish:  set -Ux TAVILY_API_KEY "tvly-..."
+#
+# LLDB MCP wraps stass/lldb-mcp at a pinned commit; it spawns `lldb` as a
+# subprocess, so any system LLDB on PATH (Xcode CLT supplies /usr/bin/lldb)
+# is sufficient — no Python-binding version match required.
 { config, pkgs, lib, ... }:
 
 let
+  # ---- LLDB MCP server (stass/lldb-mcp, single-file Python script) ----
+  lldbMcpRev = "a610f2d0d3835739c41762352442ba2a13958b38";
+  lldbMcpScript = pkgs.fetchurl {
+    url = "https://raw.githubusercontent.com/stass/lldb-mcp/${lldbMcpRev}/lldb_mcp.py";
+    hash = "sha256-K2ptzfEUga+vPRmOScnExob+DeabVXVTBBnFy7ASCUY=";
+  };
+  lldbMcpPython = pkgs.python3.withPackages (ps: [ ps.mcp ]);
+  lldbMcpServer = pkgs.writeShellScriptBin "lldb-mcp-server" ''
+    exec ${lldbMcpPython}/bin/python3 ${lldbMcpScript} "$@"
+  '';
+
   # ---- direct-mode server definitions (stdio, written to ~/.claude.json) ----
   mcpServers = {
     context7 = {
@@ -50,6 +65,12 @@ let
       command = "npx";
       args = [ "-y" "tavily-mcp@latest" ];
       env = { TAVILY_API_KEY = "$" + "{TAVILY_API_KEY}"; };
+    };
+    lldb = {
+      type = "stdio";
+      command = "${lldbMcpServer}/bin/lldb-mcp-server";
+      args = [ ];
+      env = { };
     };
   };
 
