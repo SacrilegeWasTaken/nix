@@ -37,7 +37,7 @@
 
         scrolling.history = 50000;
         # Ctrl+стрелки: Alacritty шлёт xterm CSI по умолчанию (\e[1;5D и т.д.).
-        # Маппинг <C-Left> → wincmd — в Neovim через langmapper.original_set.
+        # Маппинг <C-Left> → wincmd настроен в Neovim (keymaps).
       };
     };
 

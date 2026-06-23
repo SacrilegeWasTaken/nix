@@ -32,11 +32,14 @@ PY
         name = "sacrilegewastaken/homebrew-tap";
         clone_target = "https://codeberg.org/sacrilegewastaken/tap.git";
       }
+      "laishulu/homebrew"
     ];
     brews = [
       "mas"
       "swiftformat"
       "xcodes"
+      # CLI для переключения раскладки из Neovim (im-select.nvim).
+      "macism"
     ];
     casks = [
       "zen"

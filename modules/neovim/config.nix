@@ -1,16 +1,4 @@
-{ pkgs, lib, ... }:
-
-let
-  ruLangmap = lib.concatStringsSep "," [
-    "йq" "цw" "уe" "кr" "еt" "нy" "гu" "шi" "щo" "зp" "х[" "ъ]"
-    "фa" "ыs" "вd" "аf" "пg" "рh" "оj" "лk" "дl" "ж\\;" "э\\'"
-    "яч" "xc" "сc" "мv" "иb" "тn" "ьm" "б\\," "ю."
-    "ЙQ" "ЦW" "УE" "КR" "ЕT" "НY" "ГU" "ШI" "ЩO" "ЗP" "Х[" "Ъ]"
-    "ФA" "ЫS" "ВD" "АF" "ПG" "РH" "ОJ" "ЛK" "ДL" "Ж\\:" "Э\\\""
-    "ЯZ" "ЧX" "СC" "МV" "ИB" "ТN" "ЬM" "Б\\," "Ю."
-    "%$" "\\,^" "\\;*"
-  ];
-in
+{ pkgs, ... }:
 
 {
   config = {
@@ -43,53 +31,6 @@ in
     extraConfigLuaPre = ''
       vim.g.mapleader = " "
       vim.g.maplocalleader = " "
-      vim.opt.langmap = [=[${ruLangmap}]=]
-      require("langmapper").setup({
-        hack_keymap = true,
-        map_all_ctrl = true,
-        ctrl_map_modes = { "n", "o", "v", "x", "s", "i", "c", "t" },
-        disable_hack_modes = { "i" },
-        automapping_modes = { "n", "v", "x", "s", "o" },
-      })
-    '';
-
-    extraConfigLuaPost = ''
-      pcall(function()
-        require("langmapper").automapping({ global = true, buffer = true })
-      end)
-
-      -- Ctrl+стрелки → переключение окон. Через original_set, минуя langmapper.
-      do
-        local okm = require("langmapper").original_set
-        local keys = { "<C-Left>", "<C-Right>", "<C-Up>", "<C-Down>" }
-        local dirs = { "h", "l", "k", "j" }
-        for i = 1, 4 do
-          local d = dirs[i]
-          local rhs = function()
-            vim.cmd("wincmd " .. d)
-          end
-          okm({ "n", "v", "x" }, keys[i], rhs, { noremap = true })
-          okm("i", keys[i], rhs, { noremap = true })
-          okm("t", keys[i], rhs, { noremap = true })
-        end
-      end
-
-      -- vim-surround: кириллические дубликаты <Plug>-маппингов.
-      -- langmapper.automapping не всегда корректно дублирует <Plug>
-      -- в visual mode (особенно xmap-only), поэтому ставим вручную.
-      do
-        local okm = require("langmapper").original_set
-        -- Visual: Ы → S (обернуть выделение)
-        okm("x", "Ы", "<Plug>VSurround",  { remap = true, silent = true })
-        okm("x", "ПЫ", "<Plug>VgSurround", { remap = true, silent = true })
-        -- Normal: вы → ds, сы → cs, ны → ys, нн → yss
-        okm("n", "вы",  "<Plug>Dsurround",     { remap = true, silent = true })
-        okm("n", "сы",  "<Plug>Csurround",     { remap = true, silent = true })
-        okm("n", "ны",  "<Plug>Ysurround",     { remap = true, silent = true })
-        okm("n", "нН",  "<Plug>YSurround",     { remap = true, silent = true })
-        okm("n", "нн",  "<Plug>Yssurround",    { remap = true, silent = true })
-        okm("n", "ННН", "<Plug>YSsurround",    { remap = true, silent = true })
-      end
     '';
 
     autoCmd = [
@@ -129,6 +70,10 @@ in
       { mode = "n"; key = "<C-j>"; action = "<C-w>j"; options.desc = "Focus window down"; }
       { mode = "n"; key = "<C-k>"; action = "<C-w>k"; options.desc = "Focus window up"; }
       { mode = "n"; key = "<C-l>"; action = "<C-w>l"; options.desc = "Focus window right"; }
+      { mode = [ "n" "v" "x" "i" "t" ]; key = "<C-Left>"; action = "<cmd>wincmd h<cr>"; options.desc = "Focus window left"; }
+      { mode = [ "n" "v" "x" "i" "t" ]; key = "<C-Right>"; action = "<cmd>wincmd l<cr>"; options.desc = "Focus window right"; }
+      { mode = [ "n" "v" "x" "i" "t" ]; key = "<C-Up>"; action = "<cmd>wincmd k<cr>"; options.desc = "Focus window up"; }
+      { mode = [ "n" "v" "x" "i" "t" ]; key = "<C-Down>"; action = "<cmd>wincmd j<cr>"; options.desc = "Focus window down"; }
       { mode = "n"; key = "<C-->"; action = "<C-w><lt>"; options.desc = "Narrower split (no Shift)"; }
       { mode = "n"; key = "<C-=>"; action = "<C-w>>"; options.desc = "Wider split (no Shift)"; }
       { mode = "v"; key = "<C-c>"; action = "\"+y"; options.desc = "Copy selection to system clipboard"; }
@@ -136,9 +81,8 @@ in
     ];
 
     extraPlugins = [
-      pkgs.vimPlugins.langmapper-nvim
+      pkgs.vimPlugins.im-select-nvim
       pkgs.vimPlugins.plenary-nvim
-      pkgs.vimPlugins.claude-code-nvim
       pkgs.vimPlugins.vim-surround
       pkgs.vimPlugins.ultimate-autopair-nvim
       pkgs.vimPlugins.smear-cursor-nvim
@@ -148,54 +92,15 @@ in
     ];
 
     extraConfigLua = ''
-      require("claude-code").setup({
-        command = "claude",
-        window = {
-          split_ratio = 0.3,
-          position = "botright vsplit",
-          enter_insert = true,
-          hide_numbers = true,
-          hide_signcolumn = true,
-          float = {
-            width = "80%",
-            height = "80%",
-            row = "center",
-            col = "center",
-            relative = "editor",
-            border = "rounded",
-          },
-        },
-        refresh = {
-          enable = true,
-          updatetime = 100,
-          timer_interval = 1000,
-          show_notifications = true,
-        },
-        git = {
-          use_git_root = true,
-        },
-        shell = {
-          separator = "&&",
-          pushd_cmd = "pushd",
-          popd_cmd = "popd",
-        },
-        command_variants = {
-          continue = "--continue",
-          resume = "--resume",
-          verbose = "--verbose",
-        },
-        keymaps = {
-          toggle = {
-            normal = "<leader>cc",
-            terminal = "<leader>cc",
-            variants = {
-              continue = "<leader>cC",
-              verbose = "<leader>cV",
-            },
-          },
-          window_navigation = true,
-          scrolling = true,
-        },
+      -- Авто-переключение раскладки: en в normal/cmdline, восстановление
+      -- предыдущей (ru) при входе в insert. Бэкенд — macism (Homebrew).
+      require("im_select").setup({
+        default_im_select = "com.apple.keylayout.ABC",
+        default_command = "/opt/homebrew/bin/macism", -- macism из Homebrew
+        set_default_events = { "InsertLeave", "CmdlineLeave" },
+        set_previous_events = { "InsertEnter" },
+        async_switch_im = true,
+        keep_quiet_on_no_binary = true,
       })
 
       require("ultimate-autopair").setup({})
@@ -235,8 +140,13 @@ in
         end)
       end)
 
+      -- Диагностика рисуется инлайн (virtual_lines) только под текущей строкой.
+      -- Это не floating window, поэтому не конфликтует с hover (<leader>Rh) —
+      -- раньше авто-float по CursorHold занимал единственный слот
+      -- vim.b.lsp_floating_preview и схлопывал hover. Полный float — по <leader>k.
       vim.diagnostic.config({
         virtual_text = false,
+        virtual_lines = { current_line = true },
         underline = true,
         signs = true,
         severity_sort = true,
@@ -245,12 +155,6 @@ in
           source = "if_many",
           focusable = false,
         },
-      })
-
-      vim.api.nvim_create_autocmd("CursorHold", {
-        callback = function()
-          vim.diagnostic.open_float(nil, { scope = "cursor" })
-        end,
       })
 
       if vim.fn.has("nvim-0.11") == 1 then
@@ -279,7 +183,7 @@ in
           vim.keymap.set({ 'n', 'v' }, '<leader>ca', function()
             vim.lsp.buf.code_action({ border = "rounded" })
           end, vim.tbl_extend('force', opts, { desc = 'LSP code actions (quick fixes)' }))
-          vim.keymap.set('n', '<leader>k', vim.diagnostic.open_float, opts)
+          vim.keymap.set('n', '<leader>fd', vim.diagnostic.open_float, opts)
           vim.keymap.set('n', '<leader>th', function()
             local filter = { bufnr = event.buf }
             vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled(filter), filter)

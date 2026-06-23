@@ -10,6 +10,7 @@
   imports = [
     ../modules/common/home/fish.nix
     ../modules/common/home/git.nix
+    ../modules/emacs/emacs.nix
     ../modules/darwin/home/default.nix
     ../modules/nixos/home/default.nix
   ];

@@ -29,5 +29,6 @@
     sops
     age
     ffmpeg
+    tmux
   ];
 }
