@@ -38,8 +38,6 @@ PY
       "mas"
       "swiftformat"
       "xcodes"
-      # CLI для переключения раскладки из Neovim (im-select.nvim).
-      "macism"
     ];
     casks = [
       "zen"

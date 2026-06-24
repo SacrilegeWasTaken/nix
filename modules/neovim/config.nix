@@ -31,6 +31,14 @@
     extraConfigLuaPre = ''
       vim.g.mapleader = " "
       vim.g.maplocalleader = " "
+
+      -- Русская раскладка одним плагином: langmapper делает Neovim двуязычным.
+      -- Сам выставляет langmap для встроенных команд (`ш`→i, `ф`→a и т.д.), а
+      -- hack_keymap перехватывает vim.keymap.set, поэтому все маппиги (включая
+      -- buffer-local в LspAttach/Rust и кеймапы плагинов) автоматически работают
+      -- на обеих раскладках. Setup до кеймапов — иначе перехват не встанет.
+      -- Никаких im_select/macism и переключения ОС-раскладки не нужно.
+      require("langmapper").setup({ hack_keymap = true })
     '';
 
     autoCmd = [
@@ -81,7 +89,7 @@
     ];
 
     extraPlugins = [
-      pkgs.vimPlugins.im-select-nvim
+      pkgs.vimPlugins.langmapper-nvim
       pkgs.vimPlugins.plenary-nvim
       pkgs.vimPlugins.vim-surround
       pkgs.vimPlugins.ultimate-autopair-nvim
@@ -92,17 +100,6 @@
     ];
 
     extraConfigLua = ''
-      -- Авто-переключение раскладки: en в normal/cmdline, восстановление
-      -- предыдущей (ru) при входе в insert. Бэкенд — macism (Homebrew).
-      require("im_select").setup({
-        default_im_select = "com.apple.keylayout.ABC",
-        default_command = "/opt/homebrew/bin/macism", -- macism из Homebrew
-        set_default_events = { "InsertLeave", "CmdlineLeave" },
-        set_previous_events = { "InsertEnter" },
-        async_switch_im = true,
-        keep_quiet_on_no_binary = true,
-      })
-
       require("ultimate-autopair").setup({})
       require("smear_cursor").setup({
         stiffness = 0.8,
@@ -196,21 +193,21 @@
         pattern = "rust",
         callback = function(args)
           local opts = { buffer = args.buf, silent = true }
-          vim.keymap.set("n", "<leader>Rr", function() vim.cmd.RustLsp("runnables") end,
+          vim.keymap.set("n", "<leader>cr", function() vim.cmd.RustLsp("runnables") end,
             vim.tbl_extend("force", opts, { desc = "Rust: runnables" }))
-          vim.keymap.set("n", "<leader>Rd", function() vim.cmd.RustLsp("debuggables") end,
+          vim.keymap.set("n", "<leader>cd", function() vim.cmd.RustLsp("debuggables") end,
             vim.tbl_extend("force", opts, { desc = "Rust: debuggables" }))
-          vim.keymap.set("n", "<leader>Rm", function() vim.cmd.RustLsp("expandMacro") end,
+          vim.keymap.set("n", "<leader>cm", function() vim.cmd.RustLsp("expandMacro") end,
             vim.tbl_extend("force", opts, { desc = "Rust: expand macro" }))
-          vim.keymap.set("n", "<leader>Re", function() vim.cmd.RustLsp("explainError") end,
+          vim.keymap.set("n", "<leader>ce", function() vim.cmd.RustLsp("explainError") end,
             vim.tbl_extend("force", opts, { desc = "Rust: explain error" }))
-          vim.keymap.set("n", "<leader>Ro", function() vim.cmd.RustLsp("openCargo") end,
+          vim.keymap.set("n", "<leader>co", function() vim.cmd.RustLsp("openCargo") end,
             vim.tbl_extend("force", opts, { desc = "Rust: open Cargo.toml" }))
-          vim.keymap.set("n", "<leader>Rp", function() vim.cmd.RustLsp("parentModule") end,
+          vim.keymap.set("n", "<leader>cp", function() vim.cmd.RustLsp("parentModule") end,
             vim.tbl_extend("force", opts, { desc = "Rust: parent module" }))
-          vim.keymap.set("n", "<leader>Rh", function() vim.cmd.RustLsp({ "hover", "actions" }) end,
+          vim.keymap.set("n", "<leader>ch", function() vim.cmd.RustLsp({ "hover", "actions" }) end,
             vim.tbl_extend("force", opts, { desc = "Rust: hover actions" }))
-          vim.keymap.set("n", "<leader>RR", function() vim.cmd.RustLsp("renderDiagnostic") end,
+          vim.keymap.set("n", "<leader>cR", function() vim.cmd.RustLsp("renderDiagnostic") end,
             vim.tbl_extend("force", opts, { desc = "Rust: render diagnostic" }))
         end,
       })
@@ -400,6 +397,12 @@
       cmp = {
         enable = true;
         settings = {
+          performance = {
+            debounce = 60;
+            throttle = 30;
+            max_view_entries = 20;
+            fetching_timeout = 200;
+          };
           mapping = {
             "<C-Space>" = "cmp.mapping.complete()";
             "<C-e>"     = "cmp.mapping.close()";
@@ -410,7 +413,7 @@
           sources = [
             { name = "nvim_lsp"; }
             { name = "path"; }
-            { name = "buffer"; }
+            { name = "buffer"; keyword_length = 3; }
           ];
         };
       };

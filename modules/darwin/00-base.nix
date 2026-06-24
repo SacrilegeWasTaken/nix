@@ -14,8 +14,23 @@
   nix.gc.interval = { Hour = 12; };
 
   system.defaults.CustomUserPreferences = {
+    # Раскладка глобальная, а не «своя на каждое окно/документ».
+    # macOS по умолчанию помнит источник ввода per-context («Automatically
+    # switch to a document's input source»), из-за чего язык будто «сам не
+    # переключается» при переходе между окнами. 0 — выключить, раскладка одна на всё.
+    "com.apple.HIToolbox" = {
+      AppleGlobalTextInputProperties = {
+        TextInputGlobalPropertyPerContextInput = 0;
+      };
+    };
     "com.apple.symbolichotkeys" = {
       AppleSymbolicHotKeys = {
+        # Spotlight (Cmd+Space) — освобождаем под Raycast
+        "64" = { enabled = false; };
+        # Finder search window (Cmd+Alt+Space)
+        "65" = { enabled = false; };
+        # Quick Note (fn+Q)
+        "190" = { enabled = false; };
         # Mission Control (Ctrl+↑)
         "32" = { enabled = false; };
         "33" = { enabled = false; };
