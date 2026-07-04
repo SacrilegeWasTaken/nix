@@ -30,5 +30,8 @@
     age
     ffmpeg
     tmux
+    jdk21
+    yazi
+    zellij
   ];
 }

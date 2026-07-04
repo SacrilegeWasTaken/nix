@@ -31,6 +31,16 @@
         "65" = { enabled = false; };
         # Quick Note (fn+Q)
         "190" = { enabled = false; };
+        # Copy picture of selected area to clipboard: Ctrl+Shift+Cmd+4 → Option+Cmd+R
+        # parameters = [ ASCII virtualKeyCode modifierFlags ]; 'r'=114, keyR=15,
+        # Option(524288)+Cmd(1048576)=1572864
+        "31" = {
+          enabled = true;
+          value = {
+            parameters = [ 114 15 1572864 ];
+            type = "standard";
+          };
+        };
         # Mission Control (Ctrl+↑)
         "32" = { enabled = false; };
         "33" = { enabled = false; };
