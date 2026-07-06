@@ -11,16 +11,11 @@
     attach_to_session true
 
     // Ctrl+<Russian> mode-switches are intercepted by Alacritty (ru-bindings.toml),
-    // which sends the English KKP sequence, so Normal mode keybinds are English-only.
+    // which sends the English KKP sequence — mode-switching works in both layouts.
     //
-    // Sub-mode single-letter shortcuts can't be intercepted by Alacritty (no modifier),
-    // so both Russian and English are listed here.
-    //
-    // keybinds clear-defaults=true ensures the status bar always shows English labels:
-    // English bindings appear first in each mode block, Russian additions follow them.
-    //
-    // ЙЦУКЕН map: h=р j=о k=л l=д n=т d=в r=к s=ы x=ч f=а z=я w=ц e=у c=с i=ш
-    //             p=з a=ф u=г o=щ b=и H=Р J=О K=Л L=Д
+    // Sub-mode single-letter shortcuts are English-only here: adding Cyrillic bindings
+    // causes the status bar to display corrupted characters (Zellij 0.44.3 bug where
+    // the status bar renderer truncates Cyrillic codepoints to their low byte).
 
     keybinds clear-defaults=true {
         normal {
@@ -47,22 +42,6 @@
             bind "e" { TogglePaneEmbedOrFloating; SwitchToMode "Normal"; }
             bind "c" { SwitchToMode "RenamePane"; PaneNameInput 0; }
             bind "i" { TogglePanePinned; SwitchToMode "Normal"; }
-            bind "р" { MoveFocus "Left"; }
-            bind "о" { MoveFocus "Down"; }
-            bind "л" { MoveFocus "Up"; }
-            bind "д" { MoveFocus "Right"; }
-            bind "з" { SwitchFocus; }
-            bind "т" { NewPane; SwitchToMode "Normal"; }
-            bind "в" { NewPane "Down"; SwitchToMode "Normal"; }
-            bind "к" { NewPane "Right"; SwitchToMode "Normal"; }
-            bind "ы" { NewPane "stacked"; SwitchToMode "Normal"; }
-            bind "ч" { CloseFocus; SwitchToMode "Normal"; }
-            bind "а" { ToggleFocusFullscreen; SwitchToMode "Normal"; }
-            bind "я" { TogglePaneFrames; SwitchToMode "Normal"; }
-            bind "ц" { ToggleFloatingPanes; SwitchToMode "Normal"; }
-            bind "у" { TogglePaneEmbedOrFloating; SwitchToMode "Normal"; }
-            bind "с" { SwitchToMode "RenamePane"; PaneNameInput 0; }
-            bind "ш" { TogglePanePinned; SwitchToMode "Normal"; }
         }
         resize {
             bind "Ctrl n" { SwitchToMode "Normal"; }
@@ -76,14 +55,6 @@
             bind "L" { Resize "Decrease Right"; }
             bind "=" "+" { Resize "Increase"; }
             bind "-" { Resize "Decrease"; }
-            bind "р" { Resize "Increase Left"; }
-            bind "о" { Resize "Increase Down"; }
-            bind "л" { Resize "Increase Up"; }
-            bind "д" { Resize "Increase Right"; }
-            bind "Р" { Resize "Decrease Left"; }
-            bind "О" { Resize "Decrease Down"; }
-            bind "Л" { Resize "Decrease Up"; }
-            bind "Д" { Resize "Decrease Right"; }
         }
         tab {
             bind "Ctrl t" { SwitchToMode "Normal"; }
@@ -106,13 +77,6 @@
             bind "8" { GoToTab 8; SwitchToMode "Normal"; }
             bind "9" { GoToTab 9; SwitchToMode "Normal"; }
             bind "Tab" { ToggleTab; }
-            bind "к" { SwitchToMode "RenameTab"; TabNameInput 0; }
-            bind "р" "л" { GoToPreviousTab; }
-            bind "д" "о" { GoToNextTab; }
-            bind "т" { NewTab; SwitchToMode "Normal"; }
-            bind "ч" { CloseTab; SwitchToMode "Normal"; }
-            bind "ы" { ToggleActiveSyncTab; SwitchToMode "Normal"; }
-            bind "и" { BreakPane; SwitchToMode "Normal"; }
         }
         scroll {
             bind "Ctrl s" { SwitchToMode "Normal"; }
@@ -125,12 +89,6 @@
             bind "Ctrl b" "PageUp" "Left" "h" { PageScrollUp; }
             bind "d" { HalfPageScrollDown; }
             bind "u" { HalfPageScrollUp; }
-            bind "у" { EditScrollback; SwitchToMode "Normal"; }
-            bind "ы" { SwitchToMode "EnterSearch"; SearchInput 0; }
-            bind "о" { ScrollDown; }
-            bind "л" { ScrollUp; }
-            bind "в" { HalfPageScrollDown; }
-            bind "г" { HalfPageScrollUp; }
         }
         search {
             bind "Ctrl s" { SwitchToMode "Normal"; }
@@ -146,15 +104,6 @@
             bind "c" { SearchToggleOption "CaseSensitivity"; }
             bind "w" { SearchToggleOption "Wrap"; }
             bind "o" { SearchToggleOption "WholeWord"; }
-            bind "о" { ScrollDown; }
-            bind "л" { ScrollUp; }
-            bind "в" { HalfPageScrollDown; }
-            bind "г" { HalfPageScrollUp; }
-            bind "т" { Search "down"; }
-            bind "з" { Search "up"; }
-            bind "с" { SearchToggleOption "CaseSensitivity"; }
-            bind "ц" { SearchToggleOption "Wrap"; }
-            bind "щ" { SearchToggleOption "WholeWord"; }
         }
         entersearch {
             bind "Ctrl c" "Esc" { SwitchToMode "Scroll"; }
@@ -214,35 +163,6 @@
                 };
                 SwitchToMode "Normal"
             }
-            bind "в" { Detach; }
-            bind "ц" {
-                LaunchOrFocusPlugin "session-manager" {
-                    floating true
-                    move_to_focused_tab true
-                };
-                SwitchToMode "Normal"
-            }
-            bind "с" {
-                LaunchOrFocusPlugin "configuration" {
-                    floating true
-                    move_to_focused_tab true
-                };
-                SwitchToMode "Normal"
-            }
-            bind "з" {
-                LaunchOrFocusPlugin "plugin-manager" {
-                    floating true
-                    move_to_focused_tab true
-                };
-                SwitchToMode "Normal"
-            }
-            bind "ф" {
-                LaunchOrFocusPlugin "zellij:about" {
-                    floating true
-                    move_to_focused_tab true
-                };
-                SwitchToMode "Normal"
-            }
         }
         move {
             bind "Ctrl h" { SwitchToMode "Normal"; }
@@ -252,12 +172,6 @@
             bind "j" "Down" { MovePane "Down"; }
             bind "k" "Up" { MovePane "Up"; }
             bind "l" "Right" { MovePane "Right"; }
-            bind "т" { MovePane; }
-            bind "з" { MovePaneBackwards; }
-            bind "р" { MovePane "Left"; }
-            bind "о" { MovePane "Down"; }
-            bind "л" { MovePane "Up"; }
-            bind "д" { MovePane "Right"; }
         }
         tmux {
             bind "[" { SwitchToMode "Scroll"; }
