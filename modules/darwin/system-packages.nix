@@ -33,5 +33,6 @@
     jdk21
     yazi
     zellij
+    lazygit
   ];
 }

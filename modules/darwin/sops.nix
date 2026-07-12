@@ -19,6 +19,11 @@ in
       tavily-api-key = {
         owner = username;
       };
+      # Armored GPG signing private key, imported into the user keyring on
+      # activation (see modules/common/home/git.nix).
+      gpg-signing-key = {
+        owner = username;
+      };
     };
   };
 }
