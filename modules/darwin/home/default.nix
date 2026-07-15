@@ -6,6 +6,28 @@
   imports = [ ./claude-code.nix ];
 
   config = lib.mkIf pkgs.stdenv.isDarwin {
+    # ApplePressAndHoldEnabled (set in darwin/00-base.nix via system.defaults)
+    # keeps getting reset by macOS, so it is reapplied on every rebuild and
+    # at every login.
+    home.activation.disablePressAndHold = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+      /usr/bin/defaults write -g ApplePressAndHoldEnabled -bool false
+    '';
+
+    launchd.agents.disable-press-and-hold = {
+      enable = true;
+      config = {
+        ProgramArguments = [
+          "/usr/bin/defaults"
+          "write"
+          "-g"
+          "ApplePressAndHoldEnabled"
+          "-bool"
+          "false"
+        ];
+        RunAtLoad = true;
+      };
+    };
+
     programs.alacritty = {
       enable = true;
       settings = {
