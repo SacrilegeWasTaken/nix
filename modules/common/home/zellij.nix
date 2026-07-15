@@ -9,6 +9,7 @@
     mouse_mode true
     copy_on_select true
     attach_to_session true
+    show_startup_tips false
 
     // Ctrl+<Russian> mode-switches are intercepted by Alacritty (ru-bindings.toml),
     // which sends the English KKP sequence — mode-switching works in both layouts.

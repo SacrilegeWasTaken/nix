@@ -4,8 +4,16 @@
   programs.helix = {
     enable = true;
 
+    themes.base16_custom = {
+      inherits = "base16_default";
+      "ui.statusline" = { fg = "#d8d8d8"; bg = "#282828"; };
+      "ui.statusline.inactive" = { fg = "#585858"; bg = "#282828"; };
+      "ui.popup.info" = { fg = "#d8d8d8"; bg = "#282828"; };
+      "ui.text.info" = { fg = "#d8d8d8"; bg = "#282828"; };
+    };
+
     settings = {
-      theme = "gruvbox";
+      theme = "base16_custom";
 
       editor = {
         line-number = "relative";
@@ -13,6 +21,11 @@
         color-modes = true;
         rulers = [ 100 ];
         completion-replace = true;
+        cursorline = true;
+        popup-border = "all";
+        trim-trailing-whitespace = true;
+        insert-final-newline = true;
+        soft-wrap.enable = true;
 
         cursor-shape = {
           insert = "bar";
@@ -21,6 +34,9 @@
         };
 
         indent-guides.render = true;
+
+        end-of-line-diagnostics = "hint";
+        inline-diagnostics.cursor-line = "warning";
 
         lsp = {
           display-messages = true;
@@ -34,6 +50,7 @@
       };
 
       keys.normal = {
+        "X" = "extend_line_above";
         "C-h" = "jump_view_left";
         "C-j" = "jump_view_down";
         "C-k" = "jump_view_up";

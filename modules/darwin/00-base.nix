@@ -13,6 +13,11 @@
   # nix-darwin specific GC interval (profile sets gc.automatic/options)
   nix.gc.interval = { Hour = 12; };
 
+  # Отключаем press-and-hold (всплывашку с диакритикой) — зажатая клавиша
+  # повторяется, и переключение раскладки не дерётся с меню акцентов.
+  # Эквивалент: defaults write -g ApplePressAndHoldEnabled -bool false
+  system.defaults.NSGlobalDomain.ApplePressAndHoldEnabled = false;
+
   system.defaults.CustomUserPreferences = {
     # Раскладка глобальная, а не «своя на каждое окно/документ».
     # macOS по умолчанию помнит источник ввода per-context («Automatically

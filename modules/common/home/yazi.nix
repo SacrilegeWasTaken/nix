@@ -20,10 +20,7 @@
         }];
       };
       open.rules = [
-        { mime = "text/*"; use = [ "edit" ]; }
-        { mime = "application/json"; use = [ "edit" ]; }
-        { mime = "application/toml"; use = [ "edit" ]; }
-        { mime = "application/yaml"; use = [ "edit" ]; }
+        { name = "*"; use = [ "edit" ]; }
       ];
     };
     keymap = {
