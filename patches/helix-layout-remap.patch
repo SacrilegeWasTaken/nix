@@ -1,0 +1,240 @@
+diff --git a/helix-term/src/application.rs b/helix-term/src/application.rs
+index cf09aac..32d6514 100644
+--- a/helix-term/src/application.rs
++++ b/helix-term/src/application.rs
+@@ -128,7 +128,10 @@ pub fn new(args: Args, config: Config, lang_loader: syntax::Loader) -> Result<Se
+         let keys = Box::new(Map::new(Arc::clone(&config), |config: &Config| {
+             &config.keys
+         }));
+-        let editor_view = Box::new(ui::EditorView::new(Keymaps::new(keys)));
++        let layout_remap = Box::new(Map::new(Arc::clone(&config), |config: &Config| {
++            &config.layout_remap
++        }));
++        let editor_view = Box::new(ui::EditorView::new(Keymaps::new(keys, layout_remap)));
+         compositor.push(editor_view);
+ 
+         if args.load_tutor {
+diff --git a/helix-term/src/config.rs b/helix-term/src/config.rs
+index bcba8d8..e461225 100644
+--- a/helix-term/src/config.rs
++++ b/helix-term/src/config.rs
+@@ -14,6 +14,44 @@ pub struct Config {
+     pub theme: Option<String>,
+     pub keys: HashMap<Mode, KeyTrie>,
+     pub editor: helix_view::editor::Config,
++    pub layout_remap: HashMap<char, char>,
++}
++
++/// Keyboard layout translation table built from pairs of equal-length
++/// `from`/`into` strings, mapping characters typed on a national layout
++/// onto the characters keybindings are defined with:
++///
++/// ```toml
++/// [[layout-remap]]
++/// from = "йцукен"
++/// into = "qwerty"
++/// ```
++#[derive(Debug, Clone, PartialEq, Default)]
++pub struct LayoutRemap(pub HashMap<char, char>);
++
++impl<'de> Deserialize<'de> for LayoutRemap {
++    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
++    where
++        D: serde::Deserializer<'de>,
++    {
++        #[derive(Deserialize)]
++        #[serde(deny_unknown_fields)]
++        struct Entry {
++            from: String,
++            into: String,
++        }
++        let entries = Vec::<Entry>::deserialize(deserializer)?;
++        let mut map = HashMap::new();
++        for entry in &entries {
++            if entry.from.chars().count() != entry.into.chars().count() {
++                return Err(serde::de::Error::custom(
++                    "layout-remap: `from` and `into` must contain the same number of characters",
++                ));
++            }
++            map.extend(entry.from.chars().zip(entry.into.chars()));
++        }
++        Ok(LayoutRemap(map))
++    }
+ }
+ 
+ #[derive(Debug, Clone, PartialEq, Deserialize)]
+@@ -22,6 +60,8 @@ pub struct ConfigRaw {
+     pub theme: Option<String>,
+     pub keys: Option<HashMap<Mode, KeyTrie>>,
+     pub editor: Option<toml::Value>,
++    #[serde(rename = "layout-remap")]
++    pub layout_remap: Option<LayoutRemap>,
+ }
+ 
+ impl Default for Config {
+@@ -30,6 +70,7 @@ fn default() -> Config {
+             theme: None,
+             keys: keymap::default(),
+             editor: helix_view::editor::Config::default(),
++            layout_remap: HashMap::default(),
+         }
+     }
+ }
+@@ -88,6 +129,11 @@ pub fn load(
+                     theme: local.theme.or(global.theme),
+                     keys,
+                     editor,
++                    layout_remap: local
++                        .layout_remap
++                        .or(global.layout_remap)
++                        .unwrap_or_default()
++                        .0,
+                 }
+             }
+             // if any configs are invalid return that first
+@@ -107,6 +153,7 @@ pub fn load(
+                         || Ok(helix_view::editor::Config::default()),
+                         |val| val.try_into().map_err(ConfigLoadError::BadConfig),
+                     )?,
++                    layout_remap: config.layout_remap.unwrap_or_default().0,
+                 }
+             }
+ 
+diff --git a/helix-term/src/keymap.rs b/helix-term/src/keymap.rs
+index d8227b5..a6cadeb 100644
+--- a/helix-term/src/keymap.rs
++++ b/helix-term/src/keymap.rs
+@@ -6,7 +6,7 @@
+     access::{DynAccess, DynGuard},
+     ArcSwap,
+ };
+-use helix_view::{document::Mode, info::Info, input::KeyEvent};
++use helix_view::{document::Mode, info::Info, input::KeyEvent, keyboard::KeyCode};
+ use serde::Deserialize;
+ use std::{
+     borrow::Cow,
+@@ -288,6 +288,11 @@ pub enum KeymapResult {
+ 
+ pub struct Keymaps {
+     pub map: Box<dyn DynAccess<HashMap<Mode, KeyTrie>>>,
++    /// Character-to-character translation applied to keys before keymap
++    /// lookup so keybindings match on non-English keyboard layouts
++    /// (e.g. "й" -> "q"). Lookup-only: text insertion always uses the
++    /// original key.
++    pub layout_remap: Box<dyn DynAccess<HashMap<char, char>>>,
+     /// Stores pending keys waiting for the next key. This is relative to a
+     /// sticky node if one is in use.
+     state: Vec<KeyEvent>,
+@@ -296,14 +301,32 @@ pub struct Keymaps {
+ }
+ 
+ impl Keymaps {
+-    pub fn new(map: Box<dyn DynAccess<HashMap<Mode, KeyTrie>>>) -> Self {
++    pub fn new(
++        map: Box<dyn DynAccess<HashMap<Mode, KeyTrie>>>,
++        layout_remap: Box<dyn DynAccess<HashMap<char, char>>>,
++    ) -> Self {
+         Self {
+             map,
++            layout_remap,
+             state: Vec::new(),
+             sticky: None,
+         }
+     }
+ 
++    /// Translate `key` through the configured layout remap table.
++    /// Modifiers are preserved; non-character keys pass through unchanged.
++    fn remap_layout(&self, key: KeyEvent) -> KeyEvent {
++        if let KeyCode::Char(c) = key.code {
++            if let Some(&mapped) = self.layout_remap.load().get(&c) {
++                return KeyEvent {
++                    code: KeyCode::Char(mapped),
++                    modifiers: key.modifiers,
++                };
++            }
++        }
++        key
++    }
++
+     pub fn map(&self) -> DynGuard<HashMap<Mode, KeyTrie>> {
+         self.map.load()
+     }
+@@ -318,6 +341,7 @@ pub fn sticky(&self) -> Option<&KeyTrieNode> {
+     }
+ 
+     pub fn contains_key(&self, mode: Mode, key: KeyEvent) -> bool {
++        let key = self.remap_layout(key);
+         let keymaps = &*self.map();
+         let keymap = &keymaps[&mode];
+         keymap
+@@ -331,6 +355,7 @@ pub fn contains_key(&self, mode: Mode, key: KeyEvent) -> bool {
+     /// sticky node is in use, it will be cleared.
+     pub fn get(&mut self, mode: Mode, key: KeyEvent) -> KeymapResult {
+         // TODO: remove the sticky part and look up manually
++        let key = self.remap_layout(key);
+         let keymaps = &*self.map();
+         let keymap = &keymaps[&mode];
+ 
+@@ -383,7 +408,10 @@ pub fn get(&mut self, mode: Mode, key: KeyEvent) -> KeymapResult {
+ 
+ impl Default for Keymaps {
+     fn default() -> Self {
+-        Self::new(Box::new(ArcSwap::new(Arc::new(default()))))
++        Self::new(
++            Box::new(ArcSwap::new(Arc::new(default()))),
++            Box::new(ArcSwap::new(Arc::new(HashMap::default()))),
++        )
+     }
+ }
+ 
+@@ -420,6 +448,38 @@ fn check_duplicate_keys_in_default_keymap() {
+         Keymaps::default();
+     }
+ 
++    #[test]
++    fn layout_remap_translates_keys_for_lookup() {
++        let mut keymap = Keymaps::new(
++            Box::new(Constant(default())),
++            Box::new(Constant(hashmap!('о' => 'j', 'п' => 'g', 'у' => 'e'))),
++        );
++        assert_eq!(
++            keymap.get(Mode::Normal, key!('о')),
++            KeymapResult::Matched(MappableCommand::move_visual_line_down),
++            "remapped bare key should match the English bind"
++        );
++        // multi-key sequence: п + у == g + e -> goto_last_line
++        assert!(matches!(
++            keymap.get(Mode::Normal, key!('п')),
++            KeymapResult::Pending(_)
++        ));
++        assert_eq!(
++            keymap.get(Mode::Normal, key!('у')),
++            KeymapResult::Matched(MappableCommand::goto_last_line),
++            "remap should apply inside pending sequences"
++        );
++        // keys absent from the table pass through unchanged
++        assert_eq!(
++            keymap.get(Mode::Normal, key!('j')),
++            KeymapResult::Matched(MappableCommand::move_visual_line_down),
++            "English layout should keep working"
++        );
++        // insert mode: the remapped char misses the keymap and is inserted
++        // by the caller as the original character
++        assert_eq!(keymap.get(Mode::Insert, key!('о')), KeymapResult::NotFound);
++    }
++
+     #[test]
+     fn merge_partial_keys() {
+         let keymap = hashmap! {
+@@ -437,7 +497,10 @@ fn merge_partial_keys() {
+         merge_keys(&mut merged_keyamp, keymap.clone());
+         assert_ne!(keymap, merged_keyamp);
+ 
+-        let mut keymap = Keymaps::new(Box::new(Constant(merged_keyamp.clone())));
++        let mut keymap = Keymaps::new(
++            Box::new(Constant(merged_keyamp.clone())),
++            Box::new(Constant(HashMap::default())),
++        );
+         assert_eq!(
+             keymap.get(Mode::Normal, key!('i')),
+             KeymapResult::Matched(MappableCommand::normal_mode),
