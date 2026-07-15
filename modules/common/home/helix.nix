@@ -22,6 +22,8 @@
       "ui.statusline.inactive" = { fg = "#585858"; bg = "#282828"; };
       "ui.popup.info" = { fg = "#d8d8d8"; bg = "#282828"; };
       "ui.text.info" = { fg = "#d8d8d8"; bg = "#282828"; };
+      "ui.menu" = { fg = "#d8d8d8"; bg = "#282828"; };
+      "ui.menu.selected" = { fg = "#181818"; bg = "#7cafc2"; };
     };
 
     settings = {
