@@ -11,6 +11,7 @@
     ../modules/common/home/fish.nix
     ../modules/common/home/git.nix
     ../modules/common/home/helix.nix
+    ../modules/common/home/kitty.nix
     ../modules/common/home/yazi.nix
     ../modules/common/home/zellij.nix
     ../modules/emacs/emacs.nix

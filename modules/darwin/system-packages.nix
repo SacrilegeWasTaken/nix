@@ -26,6 +26,7 @@
     clang-tools
     claude-code
     alacritty
+    kitty
     sops
     age
     ffmpeg

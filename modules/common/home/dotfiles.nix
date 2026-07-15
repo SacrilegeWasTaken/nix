@@ -7,7 +7,6 @@ lib.mkIf (dotfilesDir != null) {
   xdg.configFile = lib.mkMerge [
     {
       "starship.toml".source = dotfilesDir + "/common/starship.toml";
-      "kitty/kitty.conf".source = dotfilesDir + "/common/kitty.conf";
       "zed" = { source = dotfilesDir + "/common/zed"; force = true; };
       "neofetch/config.conf".source = dotfilesDir + "/common/config.conf";
     }
