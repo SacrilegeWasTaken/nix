@@ -4,8 +4,8 @@
 {
   programs.git = {
     enable = true;
-    userName = "Leonid";
-    userEmail = "superdjskater@mail.ru";
+    settings.user.name = "Leonid";
+    settings.user.email = "superdjskater@mail.ru";
 
     # OpenPGP commit signing. The secret key is provisioned via sops
     # (secrets/default.yaml -> imported below); only its id is declared here.
@@ -15,7 +15,7 @@
     };
 
     # Pin the gpg binary so signing works regardless of PATH ordering.
-    extraConfig.gpg.program = "${pkgs.gnupg}/bin/gpg";
+    settings.gpg.program = "${pkgs.gnupg}/bin/gpg";
   };
 
   # Provide the gpg toolchain (gpg, gpg-agent) used for signing.
