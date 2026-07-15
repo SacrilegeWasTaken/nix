@@ -27,7 +27,7 @@
     };
 
     settings = {
-      theme = "base16_custom";
+      theme = "modus_vivendi";
 
       "layout-remap" = [
         {

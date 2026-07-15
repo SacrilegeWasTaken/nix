@@ -5,7 +5,7 @@
     enable = true;
     font = {
       name = "JetBrainsMono Nerd Font";
-      size = 12;
+      size = 12.5;
     };
     settings = {
       hide_window_decorations = "titlebar-only";
