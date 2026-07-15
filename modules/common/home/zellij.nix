@@ -1,7 +1,22 @@
-{ ... }:
+{ pkgs, ... }:
 
 {
-  programs.zellij.enable = true;
+  programs.zellij = {
+    enable = true;
+    # zellij-org/zellij#4542 (rebased onto 0.44.3, extended): parse the KKP
+    # base-layout-key field so Ctrl/Alt keybinds work on non-English layouts,
+    # and enable the "report all keys" KKP flag inside keybind-driven modes
+    # (pane/tab/resize/...) so bare-letter binds work there too, without
+    # affecting normal typing. pkgs.zellij is a wrapper; sources live in
+    # zellij-unwrapped, so the patch goes there.
+    package = pkgs.zellij.override {
+      zellij-unwrapped = pkgs.zellij-unwrapped.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [
+          ../../../patches/zellij-pr4542-layout-independent-keybinds.patch
+        ];
+      });
+    };
+  };
 
   xdg.configFile."zellij/config.kdl".text = ''
     theme "gruvbox-dark"

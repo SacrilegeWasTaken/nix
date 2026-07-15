@@ -1,0 +1,364 @@
+diff --git a/zellij-client/src/keyboard_parser.rs b/zellij-client/src/keyboard_parser.rs
+index a5cbe1c..aa05fa2 100644
+--- a/zellij-client/src/keyboard_parser.rs
++++ b/zellij-client/src/keyboard_parser.rs
+@@ -6,6 +6,8 @@ enum KittyKeysParsingState {
+     Ground,
+     ReceivedEscapeCharacter,
+     ParsingNumber,
++    ParsingShiftedKey,
++    ParsingBaseLayoutKey,
+     ParsingModifiers,
+     DoneParsingWithU,
+     DoneParsingWithTilde,
+@@ -31,6 +33,8 @@ pub enum KittyParseOutcome {
+ pub struct KittyKeyboardParser {
+     state: KittyKeysParsingState,
+     number_bytes: Vec<u8>,
++    shifted_key_bytes: Vec<u8>,
++    base_layout_bytes: Vec<u8>,
+     modifier_bytes: Vec<u8>,
+ }
+ 
+@@ -48,6 +52,8 @@ impl KittyKeyboardParser {
+         KittyKeyboardParser {
+             state: KittyKeysParsingState::Ground,
+             number_bytes: vec![],
++            shifted_key_bytes: vec![],
++            base_layout_bytes: vec![],
+             modifier_bytes: vec![],
+         }
+     }
+@@ -55,6 +61,8 @@ impl KittyKeyboardParser {
+     fn reset(&mut self) {
+         self.state = KittyKeysParsingState::Ground;
+         self.number_bytes.clear();
++        self.shifted_key_bytes.clear();
++        self.base_layout_bytes.clear();
+         self.modifier_bytes.clear();
+     }
+ 
+@@ -76,8 +84,23 @@ impl KittyKeyboardParser {
+         }
+         match self.state {
+             KittyKeysParsingState::DoneParsingWithU => {
+-                let result =
+-                    KeyWithModifier::from_bytes_with_u(&self.number_bytes, &self.modifier_bytes);
++                // CSI unicode:shifted:base-layout ; modifiers u
++                let shifted_key = if self.shifted_key_bytes.is_empty() {
++                    None
++                } else {
++                    Some(self.shifted_key_bytes.as_slice())
++                };
++                let base_layout = if self.base_layout_bytes.is_empty() {
++                    None
++                } else {
++                    Some(self.base_layout_bytes.as_slice())
++                };
++                let result = KeyWithModifier::from_bytes_with_u(
++                    &self.number_bytes,
++                    &self.modifier_bytes,
++                    shifted_key,
++                    base_layout,
++                );
+                 self.reset();
+                 match result {
+                     Some(k) => KittyParseOutcome::Complete(k),
+@@ -135,6 +158,8 @@ impl KittyKeyboardParser {
+                     _ => KittyParseOutcome::Incomplete,
+                 }
+             },
++            KittyKeysParsingState::ParsingShiftedKey
++            | KittyKeysParsingState::ParsingBaseLayoutKey => KittyParseOutcome::Incomplete,
+             KittyKeysParsingState::ReceivedEscapeCharacter => KittyParseOutcome::Incomplete,
+             KittyKeysParsingState::Ground => KittyParseOutcome::NoMatch,
+         }
+@@ -149,7 +174,20 @@ impl KittyKeyboardParser {
+             (KittyKeysParsingState::ReceivedEscapeCharacter, 91) => {
+                 self.state = KittyKeysParsingState::ParsingNumber;
+             },
+-            (KittyKeysParsingState::ParsingNumber, 59) => {
++            (KittyKeysParsingState::ParsingNumber, 58) => {
++                // colon - start parsing the shifted key
++                self.state = KittyKeysParsingState::ParsingShiftedKey;
++            },
++            (KittyKeysParsingState::ParsingShiftedKey, 58) => {
++                // colon - start parsing the base layout key
++                self.state = KittyKeysParsingState::ParsingBaseLayoutKey;
++            },
++            (
++                KittyKeysParsingState::ParsingNumber
++                | KittyKeysParsingState::ParsingShiftedKey
++                | KittyKeysParsingState::ParsingBaseLayoutKey,
++                59,
++            ) => {
+                 // semicolon
+                 if &self.number_bytes == &[49] {
+                     self.number_bytes.clear();
+@@ -157,7 +195,10 @@ impl KittyKeyboardParser {
+                 self.state = KittyKeysParsingState::ParsingModifiers;
+             },
+             (
+-                KittyKeysParsingState::ParsingNumber | KittyKeysParsingState::ParsingModifiers,
++                KittyKeysParsingState::ParsingNumber
++                | KittyKeysParsingState::ParsingShiftedKey
++                | KittyKeysParsingState::ParsingBaseLayoutKey
++                | KittyKeysParsingState::ParsingModifiers,
+                 117,
+             ) => {
+                 // u
+@@ -173,6 +214,12 @@ impl KittyKeyboardParser {
+             (KittyKeysParsingState::ParsingNumber, _) => {
+                 self.number_bytes.push(byte);
+             },
++            (KittyKeysParsingState::ParsingShiftedKey, _) => {
++                self.shifted_key_bytes.push(byte);
++            },
++            (KittyKeysParsingState::ParsingBaseLayoutKey, _) => {
++                self.base_layout_bytes.push(byte);
++            },
+             (KittyKeysParsingState::ParsingModifiers, _) => {
+                 self.modifier_bytes.push(byte);
+             },
+@@ -2055,3 +2102,63 @@ fn non_kitty_bytes_yield_nomatch_and_reset() {
+     let mut p = KittyKeyboardParser::new();
+     assert!(matches!(p.feed(b"hello"), KittyParseOutcome::NoMatch));
+ }
++
++#[test]
++pub fn can_parse_keys_with_base_layout_key() {
++    use zellij_utils::data::BareKey;
++    // CSI unicode:shifted:base-layout ; modifiers u
++    // Russian п (1087) with base layout g (103), Ctrl modifier (5)
++    let key = "\u{1b}[1087:1055:103;5u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('g')).with_ctrl_modifier()),
++        "Can parse Ctrl+п with base layout key g"
++    );
++    // Russian а (1072) with base layout f (102), Alt modifier (3)
++    let key = "\u{1b}[1072:1040:102;3u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('f')).with_alt_modifier()),
++        "Can parse Alt+а with base layout key f"
++    );
++    // Without base layout key (old format still works)
++    let key = "\u{1b}[97;5u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('a')).with_ctrl_modifier()),
++        "Can parse Ctrl+a without base layout key"
++    );
++    // Only unicode and shifted, no base layout
++    let key = "\u{1b}[1072:1040;3u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('\u{0430}')).with_alt_modifier()),
++        "Can parse Alt+а with shifted key but no base layout"
++    );
++}
++
++#[test]
++pub fn can_normalize_shift_into_characters() {
++    use zellij_utils::data::BareKey;
++    // Shift+т (base layout n) -> Char('N'), shift folded into the char
++    let key = "\u{1b}[1090:1058:110;2u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('N'))),
++        "Shift+Cyrillic letter with base layout resolves to uppercase base"
++    );
++    // English Shift+h -> Char('H') (shifted field, no base layout)
++    let key = "\u{1b}[104:72;2u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('H'))),
++        "Shift+h resolves to Char('H')"
++    );
++    // Shift+1 -> Char('!') via the shifted field
++    let key = "\u{1b}[49:33;2u";
++    assert_eq!(
++        parse_for_test(key.as_bytes()),
++        Some(KeyWithModifier::new(BareKey::Char('!'))),
++        "Shift+1 resolves to Char('!')"
++    );
++}
+diff --git a/zellij-client/src/lib.rs b/zellij-client/src/lib.rs
+index a1fcf38..5e7ce34 100644
+--- a/zellij-client/src/lib.rs
++++ b/zellij-client/src/lib.rs
+@@ -51,7 +51,7 @@ const EXIT_ALTERNATE_SCREEN: &str = "\u{1b}[?1049l";
+ const ENABLE_BRACKETED_PASTE: &str = "\u{1b}[?2004h";
+ const RESET_STYLE: &str = "\u{1b}[m";
+ const SHOW_CURSOR: &str = "\u{1b}[?25h";
+-const ENTER_KITTY_KEYBOARD_MODE: &str = "\u{1b}[>1u";
++const ENTER_KITTY_KEYBOARD_MODE: &str = "\u{1b}[>5u";
+ const EXIT_KITTY_KEYBOARD_MODE: &str = "\u{1b}[<1u";
+ const CLEAR_CLIENT_TERMINAL_ATTRIBUTES: &str = "\u{1b}[?1l\u{1b}=\u{1b}[r\u{1b}[?1000l\u{1b}[?1002l\u{1b}[?1003l\u{1b}[?1005l\u{1b}[?1006l\u{1b}[?12l";
+ /// Subscribe to host color-palette theme notifications (CSI 2031). Hosts
+diff --git a/zellij-client/src/web_client/utils.rs b/zellij-client/src/web_client/utils.rs
+index dfc40a8..58cab72 100644
+--- a/zellij-client/src/web_client/utils.rs
++++ b/zellij-client/src/web_client/utils.rs
+@@ -63,7 +63,7 @@ pub fn terminal_init_messages() -> Vec<&'static str> {
+     let clear_client_terminal_attributes = "\u{1b}[?1l\u{1b}=\u{1b}[r\u{1b}[?1000l\u{1b}[?1002l\u{1b}[?1003l\u{1b}[?1005l\u{1b}[?1006l\u{1b}[?12l";
+     let enter_alternate_screen = "\u{1b}[?1049h";
+     let bracketed_paste = "\u{1b}[?2004h";
+-    let enter_kitty_keyboard_mode = "\u{1b}[>1u";
++    let enter_kitty_keyboard_mode = "\u{1b}[>5u";
+     let enable_mouse_mode = "\u{1b}[?1000h\u{1b}[?1002h\u{1b}[?1015h\u{1b}[?1006h";
+     vec![
+         clear_client_terminal_attributes,
+diff --git a/zellij-server/src/screen.rs b/zellij-server/src/screen.rs
+index 35107c0..b1247e8 100644
+--- a/zellij-server/src/screen.rs
++++ b/zellij-server/src/screen.rs
+@@ -1400,6 +1400,15 @@ pub(crate) struct Screen {
+     #[cfg_attr(test, allow(dead_code))]
+     default_layout_name: Option<String>,
+     explicitly_disable_kitty_keyboard_protocol: bool,
++    /// Clients that currently have the kitty "report all keys as escape
++    /// codes" flag active. It is enabled while a client is inside a
++    /// keybind-driven input mode so that bare letters carry the
++    /// base-layout-key field and match keybinds on non-English layouts,
++    /// and disabled again in typing modes (Normal/Locked/rename/search
++    /// input) so plain text input is unaffected.
++    kitty_all_keys_clients: HashSet<ClientId>,
++    /// Raw sequences queued for specific clients, flushed on next render.
++    pending_kitty_flag_instructions: Vec<(ClientId, &'static str)>,
+     default_editor: Option<PathBuf>,
+     web_clients_allowed: bool,
+     web_sharing: WebSharing,
+@@ -1584,6 +1593,8 @@ impl Screen {
+             resurrectable_sessions_cache,
+             layout_dir,
+             explicitly_disable_kitty_keyboard_protocol,
++            kitty_all_keys_clients: HashSet::new(),
++            pending_kitty_flag_instructions: Vec::new(),
+             default_editor,
+             web_clients_allowed,
+             web_sharing,
+@@ -2451,6 +2462,10 @@ impl Screen {
+                 self.osc8_hyperlinks,
+             );
+ 
++            for (client_id, vte_instruction) in self.pending_kitty_flag_instructions.drain(..) {
++                output.add_pre_vte_instruction_to_client(client_id, vte_instruction);
++            }
++
+             let has_ansi_subscribers = self.pane_render_subscribers.values().any(|s| s.ansi);
+             output.collect_ansi_pane_contents =
+                 has_ansi_subscribers || self.plugins_need_ansi_pane_contents;
+@@ -3674,6 +3689,44 @@ impl Screen {
+         Ok(())
+     }
+ 
++    /// Whether keys in this mode act as commands (bound single letters)
++    /// rather than text input.
++    fn mode_uses_bare_key_bindings(mode: InputMode) -> bool {
++        matches!(
++            mode,
++            InputMode::Pane
++                | InputMode::Tab
++                | InputMode::Resize
++                | InputMode::Move
++                | InputMode::Scroll
++                | InputMode::Search
++                | InputMode::Session
++                | InputMode::Tmux
++        )
++    }
++    /// While a client is in a keybind-driven mode, ask its terminal to
++    /// report all keys as escape codes (kitty keyboard protocol flag 8, on
++    /// top of our baseline flags 1+4). Bare letters then carry the
++    /// base-layout key and match keybinds regardless of the active
++    /// keyboard layout. Reverted to the baseline flags in typing modes.
++    fn update_kitty_keyboard_flags(&mut self, new_mode: InputMode, client_id: ClientId) {
++        const ENTER_KITTY_ALL_KEYS_MODE: &str = "\u{1b}[=13;1u";
++        const EXIT_KITTY_ALL_KEYS_MODE: &str = "\u{1b}[=5;1u";
++        if self.explicitly_disable_kitty_keyboard_protocol {
++            return;
++        }
++        let wants_all_keys = Self::mode_uses_bare_key_bindings(new_mode);
++        let has_all_keys = self.kitty_all_keys_clients.contains(&client_id);
++        if wants_all_keys && !has_all_keys {
++            self.kitty_all_keys_clients.insert(client_id);
++            self.pending_kitty_flag_instructions
++                .push((client_id, ENTER_KITTY_ALL_KEYS_MODE));
++        } else if !wants_all_keys && has_all_keys {
++            self.kitty_all_keys_clients.remove(&client_id);
++            self.pending_kitty_flag_instructions
++                .push((client_id, EXIT_KITTY_ALL_KEYS_MODE));
++        }
++    }
+     pub fn change_mode(
+         &mut self,
+         new_mode: InputMode,
+@@ -3688,6 +3741,7 @@ impl Screen {
+         let previous_mode = mode_info.mode;
+         mode_info.mode = new_mode;
+         mode_info.base_mode = base_mode;
++        self.update_kitty_keyboard_flags(new_mode, client_id);
+         if mode_info.session_name.as_ref() != Some(&self.session_name) {
+             mode_info.session_name = Some(self.session_name.clone());
+         }
+diff --git a/zellij-utils/src/data.rs b/zellij-utils/src/data.rs
+index 6f10a05..8bffe91 100644
+--- a/zellij-utils/src/data.rs
++++ b/zellij-utils/src/data.rs
+@@ -465,17 +465,44 @@ impl KeyWithModifier {
+         self.key_modifiers.insert(KeyModifier::Super);
+         self
+     }
+-    pub fn from_bytes_with_u(number_bytes: &[u8], modifier_bytes: &[u8]) -> Option<Self> {
+-        // CSI number ; modifiers u
+-        let bare_key = BareKey::from_bytes_with_u(number_bytes);
++    pub fn from_bytes_with_u(
++        number_bytes: &[u8],
++        modifier_bytes: &[u8],
++        shifted_key_bytes: Option<&[u8]>,
++        base_layout_bytes: Option<&[u8]>,
++    ) -> Option<Self> {
++        // CSI unicode:shifted:base-layout ; modifiers u
++        //
++        // Prefer the base layout key so keybinds work on non-English
++        // layouts. When Shift is held, fold it into the character itself
++        // (Char('H') rather than Shift+h, Char('!') rather than Shift+1),
++        // because that is how keys are written in keybind configs.
++        let mut key_modifiers = KeyModifier::from_bytes(modifier_bytes);
++        let shift_held = key_modifiers.contains(&KeyModifier::Shift);
++        let bare_key = if let Some(base_layout_bytes) = base_layout_bytes {
++            match BareKey::from_bytes_with_u(base_layout_bytes) {
++                Some(BareKey::Char(c)) if shift_held && c.is_alphabetic() => {
++                    key_modifiers.remove(&KeyModifier::Shift);
++                    c.to_uppercase().next().map(BareKey::Char)
++                },
++                other => other,
++            }
++        } else if let (true, Some(shifted_key_bytes)) = (shift_held, shifted_key_bytes) {
++            match BareKey::from_bytes_with_u(shifted_key_bytes) {
++                Some(BareKey::Char(c)) => {
++                    key_modifiers.remove(&KeyModifier::Shift);
++                    Some(BareKey::Char(c))
++                },
++                other => other,
++            }
++        } else {
++            BareKey::from_bytes_with_u(number_bytes)
++        };
+         match bare_key {
+-            Some(bare_key) => {
+-                let key_modifiers = KeyModifier::from_bytes(modifier_bytes);
+-                Some(KeyWithModifier {
+-                    bare_key,
+-                    key_modifiers,
+-                })
+-            },
++            Some(bare_key) => Some(KeyWithModifier {
++                bare_key,
++                key_modifiers,
++            }),
+             _ => None,
+         }
+     }

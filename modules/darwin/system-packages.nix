@@ -32,7 +32,7 @@
     tmux
     jdk21
     yazi
-    zellij
+    # zellij comes from home-manager (patched package, see common/home/zellij.nix)
     lazygit
   ];
 }
