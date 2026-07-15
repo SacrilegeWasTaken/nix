@@ -6,7 +6,7 @@
     enableFishIntegration = true;
     shellWrapperName = "y";
     settings = {
-      manager = {
+      mgr = {
         show_hidden = false;
         sort_by = "alphabetical";
         sort_dir_first = true;
@@ -20,12 +20,12 @@
         }];
       };
       open.rules = [
-        { name = "*"; use = [ "edit" ]; }
+        { url = "*"; use = [ "edit" ]; }
       ];
     };
     keymap = {
-      manager.prepend_keymap = [
-        { on = [ "." ]; run = "toggle_hidden"; desc = "Toggle hidden files"; }
+      mgr.prepend_keymap = [
+        { on = [ "." ]; run = "hidden toggle"; desc = "Toggle hidden files"; }
       ];
     };
   };
