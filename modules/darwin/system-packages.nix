@@ -7,6 +7,7 @@
     git-lfs
     pipx
     ripgrep
+    fd
     zig
     zls
     ncdu
