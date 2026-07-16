@@ -1,5 +1,6 @@
-# Declarative MCP server configuration for Claude Code + SuperClaude.
+# Declarative MCP server + notification hooks configuration for Claude Code + SuperClaude.
 # Servers: context7, sequential-thinking, playwright, serena, tavily, lldb.
+# Hooks: macOS notifications on turn completion (Stop) and waiting-for-input (Notification).
 #
 # Two modes:
 #   1. Direct (default) — activation merges server entries into ~/.claude.json.
@@ -223,6 +224,75 @@ let
     echo "To switch back to direct MCP mode, run:  darwin-rebuild switch --flake .#laptop --impure"
   '';
 
+  # ---- macOS notification hooks for Claude Code ----
+  # Stop: fires when Claude finishes a turn; the notification body is the first
+  # line of the last assistant message extracted from the session transcript.
+  claudeStopNotifyScript = pkgs.writeShellScript "claude-stop-notify" ''
+    transcript=$(${pkgs.jq}/bin/jq -r '.transcript_path // empty')
+    summary=""
+    if [ -n "$transcript" ] && [ -f "$transcript" ]; then
+      summary=$(${pkgs.jq}/bin/jq -rs '
+          [.[] | select(.type == "assistant")
+               | .message.content[]? | select(.type == "text") | .text]
+          | last // empty' "$transcript" \
+        | head -n 1 | cut -c1-140 | tr -d '"\\')
+    fi
+    /usr/bin/osascript -e "display notification \"''${summary:-Task finished}\" with title \"Claude Code\" sound name \"Glass\""
+  '';
+
+  # Notification: fires when Claude waits for permission or user input.
+  claudeInputNotifyScript = pkgs.writeShellScript "claude-input-notify" ''
+    msg=$(${pkgs.jq}/bin/jq -r '.message // "Claude is waiting for input"' \
+      | head -n 1 | cut -c1-140 | tr -d '"\\')
+    /usr/bin/osascript -e "display notification \"$msg\" with title \"Claude Code\" subtitle \"Waiting for input\" sound name \"Ping\""
+  '';
+
+  claudeHooksFile = pkgs.writeText "claude-hooks.json" (builtins.toJSON {
+    Stop = [{
+      hooks = [{
+        type = "command";
+        command = "${claudeStopNotifyScript}";
+        timeout = 10;
+      }];
+    }];
+    Notification = [{
+      hooks = [{
+        type = "command";
+        command = "${claudeInputNotifyScript}";
+        timeout = 10;
+      }];
+    }];
+  });
+
+  # Merges the Nix-managed "hooks" section into the mutable ~/.claude/settings.json.
+  # The file itself must stay writable (Claude Code updates it at runtime), so we
+  # own only the hooks key instead of symlinking the whole file.
+  setupHooksScript = pkgs.writeScript "setup-claude-hooks" ''
+    #!${pkgs.python3}/bin/python3
+    import json, os, sys
+
+    settings_path = os.path.expanduser("~/.claude/settings.json")
+
+    try:
+        with open("${claudeHooksFile}") as f:
+            hooks = json.load(f)
+
+        try:
+            with open(settings_path) as f:
+                settings = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            settings = {}
+
+        settings["hooks"] = hooks
+
+        os.makedirs(os.path.dirname(settings_path), exist_ok=True)
+        with open(settings_path, "w") as f:
+            json.dump(settings, f, indent=2, ensure_ascii=False)
+            f.write("\n")
+    except Exception as e:
+        print(f"Warning: Claude hooks setup skipped: {e}", file=sys.stderr)
+  '';
+
   # Helper: install/upgrade SuperClaude framework
   superclaudeSetupScript = pkgs.writeShellScriptBin "superclaude-setup" ''
     set -euo pipefail
@@ -246,6 +316,10 @@ in
 lib.mkIf pkgs.stdenv.isDarwin {
   home.activation.setupClaudeMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupMcpScript}
+  '';
+
+  home.activation.setupClaudeHooks = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    ${setupHooksScript}
   '';
 
   home.packages = [
