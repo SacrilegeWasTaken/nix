@@ -25,10 +25,14 @@
 - Reply in the chat in Russian, unless explicitly asked to switch languages.
 
 # Notifications (macOS)
-- Automatic notifications are handled by hooks (home-manager, claude-code.nix): the Stop
-  hook fires on turn completion with the first line of your last reply; the Notification
-  hook fires when you wait for permission or input. NEVER duplicate them manually.
-- Send a manual notification only for events the hooks cannot cover — a milestone inside a
-  long-running task, or a failure the user must see immediately:
-  `osascript -e 'display notification "<message>" with title "Claude Code" sound name "Glass"'`
-- Notification text: under 100 characters, plain text, no double quotes.
+- If the user's message ends with `--notify`, you MUST send a macOS notification the moment
+  the requested work finishes — script completed, build succeeded or failed, implementation
+  done, tests passed, etc.:
+  `osascript -e 'display notification "<one-line outcome>" with title "Claude Code"'; afplay /System/Library/Sounds/Glass.aiff`
+  (sound via `afplay`, not `sound name` — plain audio playback cuts through Focus/DND while
+  notification sounds get muted by it)
+- The text states the outcome, not the process ("build OK", "tests: 3 failed", "refactor done"):
+  under 100 characters, plain text, no double quotes.
+- `--notify` applies to the whole task: if it has several long stages (e.g. build, then tests),
+  notify after each stage that takes noticeable time, and always on any failure.
+- Without `--notify`, do not send notifications.
