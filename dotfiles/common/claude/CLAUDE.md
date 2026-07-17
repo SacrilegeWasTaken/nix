@@ -1,3 +1,16 @@
+# System Configuration (nix-darwin)
+- The system is fully declarative: ~/Projects/Darwin (nix-darwin + home-manager flake).
+- Any request to install a package, change a system setting, or tweak dotfiles means
+  editing this repo. NEVER mutate the system directly (no brew install, no manual
+  edits of files that home-manager owns).
+- Before editing, explore the repo with `tree` and `rg`: find where similar things
+  already live and follow that pattern. If unsure how to organize a change — ask.
+- Validate with `nix build .#darwinConfigurations.laptop.system --impure` before committing.
+- When the change is done and validated: commit and push to origin without asking.
+  This auto-push rule applies to THIS repo only.
+- Files from dotfiles/ are symlinked into place via the nix store; remind the user to run
+  `darwin-rebuild switch --flake .#laptop --impure` for changes to take effect.
+
 # Git
 - One logical change per commit. If a task touches unrelated concerns (e.g. a fix plus a
   config tweak), split them into separate commits.
@@ -5,6 +18,8 @@
   add a body only when the "why" is not obvious from the diff.
 - NEVER add a Co-Authored-By trailer or any other AI attribution to commits or PRs.
 - NEVER merge branches unless explicitly asked to merge.
+- NEVER commit or push on your own initiative. The only exception is ~/Projects/Darwin
+  (see System Configuration).
 
 # Code Style
 - Prefer self-documenting code: clear names and small focused functions instead of inline
