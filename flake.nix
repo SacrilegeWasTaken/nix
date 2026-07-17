@@ -76,7 +76,7 @@
           ./modules/nix/nix-settings.nix
           ./modules/common/dev/rust.nix
           ./modules/common/dev/haskell.nix
-          ./modules/darwin/dev/julia.nix
+          # ./modules/darwin/dev/julia.nix
           ./modules/apps/vscode.nix
           ./modules/apps/olovebar.nix
           nixvim.nixDarwinModules.nixvim
