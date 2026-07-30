@@ -41,7 +41,10 @@ PY
     ];
     casks = [
       "zen"
-      "raycast"
+      # Raycast's release server rejects downloads from this network (HTTP 403),
+      # so a greedy upgrade fails the whole bundle. The app updates itself
+      # (auto_updates), so let brew skip its upgrades.
+      { name = "raycast"; greedy = false; }
       "docker-desktop"
       "aerospace"
       "olovebar"
