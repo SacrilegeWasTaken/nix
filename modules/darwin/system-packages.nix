@@ -5,7 +5,12 @@
   environment.systemPackages = with pkgs; [
     git
     git-lfs
-    pipx
+    # pipx 1.14.0 tests in test_inject.py break under the pytest shipped in the
+    # current nixpkgs snapshot (parametrize splits the spec string per character);
+    # drop the workaround once nixpkgs fixes the package.
+    (pipx.overridePythonAttrs (old: {
+      disabledTestPaths = (old.disabledTestPaths or [ ]) ++ [ "tests/test_inject.py" ];
+    }))
     ripgrep
     fd
     zig
