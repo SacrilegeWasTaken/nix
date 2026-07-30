@@ -90,22 +90,6 @@
         "type": "github"
       }
     },
-    "laishulu-tap": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1779500134,
-        "narHash": "sha256-goVJjDuhP5Re4dCi795VkfkPd06d8CvZoj5d5zKWc6g=",
-        "owner": "laishulu",
-        "repo": "homebrew-homebrew",
-        "rev": "c29b18a5ae6e90c2e51ec8df8624d8916ac3b051",
-        "type": "github"
-      },
-      "original": {
-        "owner": "laishulu",
-        "repo": "homebrew-homebrew",
-        "type": "github"
-      }
-    },
     "nikitabobko-tap": {
       "flake": false,
       "locked": {
@@ -234,7 +218,6 @@
         "home-manager": "home-manager",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
-        "laishulu-tap": "laishulu-tap",
         "nikitabobko-tap": "nikitabobko-tap",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
