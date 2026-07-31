@@ -200,17 +200,17 @@
     "olovebar": {
       "flake": false,
       "locked": {
-        "lastModified": 1774566420,
-        "narHash": "sha256-di6PwsmM2P9umj6W0X6DVf4I4TOInhR4ikoQEcQXbqM=",
+        "lastModified": 1785510865,
+        "narHash": "sha256-jl2nkpUpuI2oovnlmUHsQcSL3DjP4LGx/pzNDVQqaYw=",
         "ref": "refs/heads/main",
-        "rev": "878dac6f54c422769a57870b7fdb726b340f5094",
-        "revCount": 243,
+        "rev": "3fbf65cb95c4292efac7a1fd2ef69c2f607f84d0",
+        "revCount": 253,
         "type": "git",
-        "url": "https://codeberg.org/sacrilegewastaken/olovebar.git"
+        "url": "ssh://git@codeberg.org/sacrilegewastaken/olovebar.git"
       },
       "original": {
         "type": "git",
-        "url": "https://codeberg.org/sacrilegewastaken/olovebar.git"
+        "url": "ssh://git@codeberg.org/sacrilegewastaken/olovebar.git"
       }
     },
     "root": {
@@ -231,17 +231,17 @@
     "sacrilegewastaken-tap": {
       "flake": false,
       "locked": {
-        "lastModified": 1774735236,
-        "narHash": "sha256-ouhtVJG11S4BUCyK1qmXKFk9u3jGtEw42V+KFTt12MA=",
+        "lastModified": 1785510767,
+        "narHash": "sha256-MWg/lh4dk4ADLhL9kItKoQPQlLrHEPBNWK1wxs4UHA8=",
         "ref": "refs/heads/main",
-        "rev": "887264aafe85cdb4f3718739377211c80c495d53",
-        "revCount": 29,
+        "rev": "87c71e736507d2caee71646ea12bc30e3d8db90f",
+        "revCount": 30,
         "type": "git",
-        "url": "https://codeberg.org/sacrilegewastaken/tap.git"
+        "url": "ssh://git@codeberg.org/sacrilegewastaken/tap.git"
       },
       "original": {
         "type": "git",
-        "url": "https://codeberg.org/sacrilegewastaken/tap.git"
+        "url": "ssh://git@codeberg.org/sacrilegewastaken/tap.git"
       }
     },
     "sops-nix": {

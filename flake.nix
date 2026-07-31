@@ -31,8 +31,10 @@
     homebrew-core = { url = "github:homebrew/homebrew-core"; flake = false; };
     homebrew-cask = { url = "github:homebrew/homebrew-cask"; flake = false; };
     nikitabobko-tap = { url = "github:nikitabobko/homebrew-tap"; flake = false; };
-    sacrilegewastaken-tap = { url = "git+https://codeberg.org/sacrilegewastaken/tap.git"; flake = false; };
-    olovebar = { url = "git+https://codeberg.org/sacrilegewastaken/olovebar.git"; flake = false; };
+    # SSH, not HTTPS: Codeberg's anti-bot blocks non-browser HTTPS clients
+    # (nix/git/curl get 403/503) while SSH key auth works.
+    sacrilegewastaken-tap = { url = "git+ssh://git@codeberg.org/sacrilegewastaken/tap.git"; flake = false; };
+    olovebar = { url = "git+ssh://git@codeberg.org/sacrilegewastaken/olovebar.git"; flake = false; };
   };
 
   outputs = inputs @ { self, nix-darwin, nixpkgs, home-manager, nix-homebrew
