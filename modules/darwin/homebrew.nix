@@ -54,7 +54,9 @@ PY
       { name = "raycast"; greedy = false; }
       "docker-desktop"
       "aerospace"
-      "olovebar"
+      # Pin the versioned cask: the "olovebar" latest alias points at the
+      # mutable download/latest/ release asset, which isn't updated per release.
+      "olovebar@0.6.0"
     ];
     masApps = {
       # "Amphetamine" = 937984704;
