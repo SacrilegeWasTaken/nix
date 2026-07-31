@@ -31,9 +31,13 @@ PY
         clone_target = "https://github.com/nikitabobko/homebrew-tap.git";
         trusted = true;
       }
+      # No clone_target here: with a custom remote, bundle records tap trust by
+      # URL, which can never match this tap — nix-homebrew installs it from a
+      # flake input as a remote-less store symlink, not a git clone. Without
+      # clone_target, trust is recorded by tap name and matches. The tap itself
+      # still comes from the flake input (see nix-homebrew.taps in flake.nix).
       {
         name = "sacrilegewastaken/homebrew-tap";
-        clone_target = "https://codeberg.org/sacrilegewastaken/tap.git";
         trusted = true;
       }
     ];
