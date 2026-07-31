@@ -24,13 +24,17 @@ PY
     taps = [
       "homebrew/homebrew-core"
       "homebrew/homebrew-cask"
+      # Homebrew 6 refuses formulae/casks from untrusted third-party taps.
+      # These taps are pinned as flake inputs, so trusting them is declarative.
       {
         name = "nikitabobko/tap";
         clone_target = "https://github.com/nikitabobko/homebrew-tap.git";
+        trusted = true;
       }
       {
         name = "sacrilegewastaken/homebrew-tap";
         clone_target = "https://codeberg.org/sacrilegewastaken/tap.git";
+        trusted = true;
       }
     ];
     brews = [
