@@ -8,10 +8,12 @@
 #  'sketchybar --trigger aerospace_workspace_change',
 #]
 
+# The focused= parameter lets OLoveBar update the workspace indicator
+# instantly, without a round-trip back to the AeroSpace server.
 exec-on-workspace-change = [
   '/bin/zsh',
   '-c',
-  'curl -s localhost:43551'
+  'curl -s "localhost:43551/?focused=$AEROSPACE_FOCUSED_WORKSPACE"'
 ]
 
 # 'start-at-login' needs to be 'true' for 'after-login-command' to work
