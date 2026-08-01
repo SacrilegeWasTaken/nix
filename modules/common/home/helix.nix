@@ -104,7 +104,7 @@
           "--background-index"
           "--clang-tidy"
           "--completion-style=detailed"
-          "--fallback-style=LLVM"
+          "--fallback-style={BasedOnStyle: LLVM, IndentWidth: 4}"
         ];
       };
 
@@ -117,11 +117,13 @@
           name = "c";
           auto-format = true;
           language-servers = [ "clangd" ];
+          indent = { tab-width = 4; unit = "    "; };
         }
         {
           name = "cpp";
           auto-format = true;
           language-servers = [ "clangd" ];
+          indent = { tab-width = 4; unit = "    "; };
         }
         {
           name = "zig";
