@@ -17,6 +17,7 @@
     zls
     ncdu
     cmake
+    bazel
     btop
     tree
     uv
