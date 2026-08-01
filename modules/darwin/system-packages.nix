@@ -17,7 +17,7 @@
     zls
     ncdu
     cmake
-    bazel
+    bazel_8
     btop
     tree
     uv
