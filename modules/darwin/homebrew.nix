@@ -52,7 +52,6 @@ PY
       # so a greedy upgrade fails the whole bundle. The app updates itself
       # (auto_updates), so let brew skip its upgrades.
       { name = "raycast"; greedy = false; }
-      "docker-desktop"
       "orbstack"
       "aerospace"
       # Pin the versioned cask: the "olovebar" latest alias points at the
