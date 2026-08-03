@@ -14,6 +14,14 @@
       signByDefault = true;
     };
 
+    # git-lfs clean/smudge/process filters (was pinned in the legacy
+    # ~/.gitconfig; git-lfs is provided system-wide).
+    lfs.enable = true;
+
+    # Global ignore list (migrated from ~/.gitignore_global); home-manager
+    # writes the file and points core.excludesFile at it.
+    ignores = [ ".DS_Store" ".idea.md" ".cursorignore" ];
+
     # Point at the gpg in the user profile rather than a raw ${pkgs.gnupg}
     # store path: the profile symlink always tracks the active generation, so
     # a gnupg version bump followed by nix-collect-garbage cannot leave the
