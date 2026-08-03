@@ -53,6 +53,7 @@ PY
       # (auto_updates), so let brew skip its upgrades.
       { name = "raycast"; greedy = false; }
       "docker-desktop"
+      "orbstack"
       "aerospace"
       # Pin the versioned cask: the "olovebar" latest alias points at the
       # mutable download/latest/ release asset, which isn't updated per release.
