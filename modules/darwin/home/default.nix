@@ -70,7 +70,7 @@
     # chr(92)+'u001b' = backslash+'u001b' = the 6-char  TOML escape.
     # The generated file has "[103;5u" etc. (valid TOML), never a raw ESC byte.
     xdg.configFile."alacritty/ru-bindings.toml".source =
-      pkgs.runCommandNoCC "alacritty-ru-bindings" { } ''
+      pkgs.runCommand "alacritty-ru-bindings" { } ''
         ${pkgs.python3}/bin/python3 - > "$out" << 'PYEOF'
         import sys
         bsl = chr(92)

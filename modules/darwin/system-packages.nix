@@ -20,7 +20,7 @@
     # bazelisk resolves the Bazel version per project (.bazelversion / MODULE.bazel).
     # Expose it as `bazel` too, and skip the sha256sum helper it ships to keep it
     # out of the system PATH.
-    (runCommandNoCC "bazelisk-with-bazel" { } ''
+    (runCommand "bazelisk-with-bazel" { } ''
       mkdir -p $out/bin
       ln -s ${bazelisk}/bin/bazelisk $out/bin/bazelisk
       ln -s ${bazelisk}/bin/bazelisk $out/bin/bazel
