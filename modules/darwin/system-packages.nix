@@ -25,6 +25,7 @@
       ln -s ${bazelisk}/bin/bazelisk $out/bin/bazelisk
       ln -s ${bazelisk}/bin/bazelisk $out/bin/bazel
     '')
+    buck2
     btop
     tree
     uv
