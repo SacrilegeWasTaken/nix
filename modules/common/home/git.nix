@@ -14,8 +14,12 @@
       signByDefault = true;
     };
 
-    # Pin the gpg binary so signing works regardless of PATH ordering.
-    settings.gpg.program = "${pkgs.gnupg}/bin/gpg";
+    # Point at the gpg in the user profile rather than a raw ${pkgs.gnupg}
+    # store path: the profile symlink always tracks the active generation, so
+    # a gnupg version bump followed by nix-collect-garbage cannot leave the
+    # baked-in path dangling (the failure mode when the store path is pinned
+    # directly). programs.gpg.enable below guarantees gpg is in the profile.
+    settings.gpg.program = "${config.home.profileDirectory}/bin/gpg";
   };
 
   # Provide the gpg toolchain (gpg, gpg-agent) used for signing.
