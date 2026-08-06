@@ -42,6 +42,7 @@ PY
       }
     ];
     brews = [
+      "bazel-remote"
       "mas"
       "swiftformat"
       "xcodes"
