@@ -26,9 +26,10 @@
       ln -s ${bazelisk}/bin/bazelisk $out/bin/bazel
     '')
     buck2
-    # Static analyzer; not available via Homebrew (the formula was disabled
-    # upstream because it fails to build), so it comes from nixpkgs.
-    infer
+    # Not from Homebrew (the formula was disabled upstream because it fails to
+    # build) and not pkgs.infer, which is a source build of the whole OCaml
+    # stack; see pkgs/infer.nix for the prebuilt release instead.
+    (callPackage ../../pkgs/infer.nix { })
     btop
     tree
     uv
