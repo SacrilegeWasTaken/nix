@@ -43,6 +43,7 @@ PY
     ];
     brews = [
       "bazel-remote"
+      "dotslash"
       # gmp and zstd are here for Infer, which nixpkgs does not package. Its
       # macOS release links libgmp.10.dylib and libzstd.1.dylib by absolute
       # path under /opt/homebrew/opt, so they have to exist at exactly those
