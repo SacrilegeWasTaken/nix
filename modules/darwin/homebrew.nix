@@ -44,18 +44,9 @@ PY
     brews = [
       "bazel-remote"
       "dotslash"
-      # gmp and zstd are here for Infer, which nixpkgs does not package. Its
-      # macOS release links libgmp.10.dylib and libzstd.1.dylib by absolute
-      # path under /opt/homebrew/opt, so they have to exist at exactly those
-      # paths — pointing DYLD_FALLBACK_LIBRARY_PATH at the nix store starts the
-      # parent process and then fails in every worker it spawns, and the binary
-      # cannot be patched in place because its load commands have no room for
-      # a longer path.
-      "gmp"
       "mas"
       "swiftformat"
       "xcodes"
-      "zstd"
     ];
     casks = [
       "zen"
