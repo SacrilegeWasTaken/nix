@@ -26,6 +26,9 @@
       ln -s ${bazelisk}/bin/bazelisk $out/bin/bazel
     '')
     buck2
+    # Static analyzer; not available via Homebrew (the formula was disabled
+    # upstream because it fails to build), so it comes from nixpkgs.
+    infer
     btop
     tree
     uv
