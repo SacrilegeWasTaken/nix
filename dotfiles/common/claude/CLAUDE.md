@@ -11,7 +11,18 @@
 - Files from dotfiles/ are symlinked into place via the nix store; remind the user to run
   `darwin-rebuild switch --flake .#laptop --impure` for changes to take effect.
 
-# Git
+# Version Control
+- Use `sl` (Sapling), not `git`, for everyday work: `sl status`, `sl diff`, `sl log`,
+  `sl smartlog`, `sl add`, `sl commit`, `sl goto`, `sl pull`, `sl push --to <branch>`.
+  Sapling drives plain git repos directly, and every commit it creates is GPG-signed
+  with the key declared in modules/common/home/sapling.nix.
+- Fall back to `git` only where Sapling has no equivalent (`git verify-commit`, force
+  pushes, submodules) or where a repo cannot be driven by sl.
+- `sl add` does NOT stage into git's index: a new file stays untracked for git until the
+  sl commit lands, and `nix build --impure` (flakes only see git-tracked files) will fail
+  to find it. Run `git add` on new files before validating a build.
+- `sl push` uses Sapling's own remotes, which are snapshotted from git at first use and do
+  NOT follow later `git remote` changes. Check `sl path` before pushing.
 - One logical change per commit. If a task touches unrelated concerns (e.g. a fix plus a
   config tweak), split them into separate commits.
 - Commit messages are self-explanatory: imperative summary line matching project style-guide;
