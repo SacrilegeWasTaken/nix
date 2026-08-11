@@ -45,6 +45,10 @@ PY
       "bazel-remote"
       "dotslash"
       "mas"
+      # From Homebrew rather than nixpkgs: the nixpkgs build is not in the
+      # binary cache for aarch64-darwin, so every bump means compiling mise
+      # from source, while homebrew-core ships an arm64 bottle.
+      "mise"
       "swiftformat"
       "xcodes"
     ];

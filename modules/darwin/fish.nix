@@ -20,6 +20,10 @@
     '';
     interactiveShellInit = ''
       starship init fish | source
+      # Guarded: mise comes from Homebrew, so it is absent until the bundle runs.
+      if command -v mise >/dev/null 2>&1
+        mise activate fish | source
+      end
       alias vim="nvim"
       if command -v docker >/dev/null 2>&1
         set -gx CROSS_CONTAINER_ENGINE "docker"
