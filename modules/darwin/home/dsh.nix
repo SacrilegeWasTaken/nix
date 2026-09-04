@@ -4,8 +4,9 @@
 # claude-code.nix.
 #
 # dsh has no nixpkgs derivation yet (developer preview, breaking changes
-# expected), so it is run the same way upstream recommends: `npx -y
-# @deepseek-ai/dsh`. MCP servers are not read from a JSON file like Claude
+# expected); this wrapper runs the npm distribution under `node
+# --expose-internals` (required by its HMR service, see below). MCP servers
+# are not read from a JSON file like Claude
 # Code; dsh loads a Cordis YAML "patch" layer at $DSH_HOME/cordis.patch.yml
 # (default $DSH_HOME is ~/.dsh) via the @deepseek-ai/dsh-mcp-client plugin.
 #
@@ -14,125 +15,32 @@
 # dsh strips ambient vars that look like credentials before starting an MCP
 # child, so the key is re-added explicitly via a `!!js` env expression below.
 #
-# ---- TUI front end (@deepseek-harness-tui/dsh-tui, THIRD-PARTY, not from
-# deepseek-ai) ----
-# dsh ships no terminal UI of its own (only web/headless/sdk/acp profiles).
-# dsh-tui (github.com/ccch1mneyyy/dsh-TUI) is the community out-of-tree
-# plugin bundle chosen for it -- picked over github.com/dsh-tui/dsh-tui
-# (npm @dsh-tui/dsh-tui) because that one pins peer deps to the
-# @deepseek-ai/dsh rc it shipped against (0.1.0-rc.6, 2026-08-14) and never
-# updated, so its own bundled storage/session-projection-cache plugin rows
-# now collide with the identically-named rows dsh-base gained since:
-# `duplicate loader entry id: storage` at boot. This plugin's pair of
-# installable versions pins the core to 0.1.2-alpha.2 -- the LAST core with
-# the Session.events getter. dsh 0.1.2-alpha.4 removed it in favor of
-# snapshotEvents() (upstream commit 5660f44d29 "perf(session): separate
-# indexed and snapshot log reads"); the plugin still calls .events, so any
-# core >= alpha.4 (alpha.4/alpha.5/rc.1) crashes its transcript replay with
-# "events is not iterable" (fix is upstream PR ccch1mneyyy/dsh-TUI#718,
-# unmerged). The newest plugin release (beta.5) tracks rc.1 but cannot be
-# installed: its peer range @deepseek-ai/dsh-storage@>=0.1.2 <0.2.0-0
-# matches no published version (0.1.2-rc.1 is a prerelease and excluded).
-# alpha.2 is the author's own validated backward-compat line (beta.4 peers
-# accept ^0.1.2-alpha.2), so it is the pin here.
+# An interactive TUI (dsh-tui) was tried and removed: the plugin ecosystem
+# around it is not yet compatible with the current core -- dsh 0.1.2-alpha.4
+# removed the Session.events getter the plugin's transcript replay still
+# calls ("events is not iterable"), and the plugin releases that track the
+# newer core cannot be installed (broken peer ranges). Web is the supported
+# interactive surface right now: `dsh web` -> http://127.0.0.1:3080.
 #
-# dsh-tui must NOT be booted through the npx wrapper: the loader entry
-# names are bare specifiers (@deepseek-harness-tui/dsh-tui/...) and the
-# npx cache is a separate npm closure, so resolution from
-# @deepseek-ai/cordis-plugin-loader cannot see the plugin installed into
-# the profile -> ERR_MODULE_NOT_FOUND on every entry. Instead the plugin
-# and the @deepseek-ai core are installed into ONE pnpm closure under
-# $DSH_HOME/profiles/dsh-tui (mirroring the upstream `npm i -g` of both)
-# and launched from there. Two more constraints surfaced the hard way:
-#   * autoInstallPeers: true in that profile -- pnpm's default (false)
-#     skips peer deps of the core bundles, e.g. dsh-session-title-llm,
-#     which are not otherwise declared.
-#   * `node --expose-internals` -- the plugin's HMR service refuses to
-#     start without it, and pnpm's bin shim does not pass it.
-# With all three the plugin tree boots and every MCP server comes up
-# (verified against the same cordis.patch.yml used by the web profile).
-#
-# Like any dsh plugin it runs with the harness's full access (files,
-# network, credentials) and has not been audited. Bootstrap is therefore a
-# manual step (dsh-tui-setup) rather than something home-manager activation
-# runs unattended -- same reasoning as the airis-mcp-setup /
-# superclaude-setup helpers below.
-# Needs DEEPSEEK_API_KEY in the environment; set it the same way as
-# TAVILY_API_KEY above.
+# Plain `npx -y @deepseek-ai/dsh@latest web` no longer boots even by itself:
+# the current core mounts cordis-plugin-hmr in live profiles, and its HMR
+# service refuses to start without `--expose-internals`, which Node forbids
+# passing via NODE_OPTIONS (so it must be a real CLI flag). The launcher
+# below therefore primes the npx cache once, then runs the cached bin with
+# `node --expose-internals`. Verified: web boots, HTTP 200 auth page (401
+# without the token is the expected pre-auth answer), no crash after 45s.
 { config, pkgs, lib, ... }:
 
 let
   lldbMcpServer = pkgs.callPackage ../../../pkgs/lldb-mcp.nix { };
 
   dshLauncher = pkgs.writeShellScriptBin "dsh" ''
-    exec npx -y @deepseek-ai/dsh@latest "$@"
-  '';
-
-  # Boot the TUI from the profile's own pnpm closure (plugin + core in one
-  # node_modules, see the comment block above). ~ is expanded at run time
-  # because this script is immutable in the nix store.
-  dshTuiRun = ''
-    PROFILE="$HOME/.dsh/profiles/dsh-tui"
-    BIN="$PROFILE/node_modules/@deepseek-ai/dsh/lib/bin.js"
-    if [ ! -x "$(command -v node)" ]; then
-      echo "node not found on PATH" >&2
-      exit 1
+    BIN="$(ls -t "$HOME"/.npm/_npx/*/node_modules/@deepseek-ai/dsh/lib/bin.js 2>/dev/null | head -1)"
+    if [ -z "$BIN" ]; then
+      npx -y @deepseek-ai/dsh@latest --version >/dev/null 2>&1
+      BIN="$(ls -t "$HOME"/.npm/_npx/*/node_modules/@deepseek-ai/dsh/lib/bin.js 2>/dev/null | head -1)"
     fi
-    if [ ! -f "$BIN" ]; then
-      echo "dsh-tui profile not set up yet -- run: dsh-tui-setup" >&2
-      exit 1
-    fi
-    exec node --expose-internals "$BIN" --profile dsh-tui "$@"
-  '';
-
-  dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" dshTuiRun;
-
-  dshtShortcut = pkgs.writeShellScriptBin "dsht" dshTuiRun;
-
-  dshTuiSetupScript = pkgs.writeShellScriptBin "dsh-tui-setup" ''
-    set -euo pipefail
-    PROFILE="$HOME/.dsh/profiles/dsh-tui"
-    echo "Installing dsh core + dsh-tui into the 'dsh-tui' dsh profile..."
-
-    # Initializes the profile manifest (dsh.profile.bundles) and installs
-    # the plugin into ~/.dsh/profiles/dsh-tui/node_modules.
-    npx -y @deepseek-ai/dsh@latest plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
-
-    # Install the @deepseek-ai core into the SAME closure so bare loader
-    # specifiers resolve (see the comment block above). Pinned to
-    # 0.1.2-alpha.2: alpha.4 removed the Session.events getter that the
-    # plugin's transcript replay still calls, so alpha.4/alpha.5/rc.1 all
-    # crash with "events is not iterable" (fix upstream in PR #718,
-    # unmerged), and beta.5 -- the release that tracks rc.1 -- cannot be
-    # installed because its peer range @deepseek-ai/dsh-storage@>=0.1.2
-    # <0.2.0-0 matches no published version. alpha.2 is the plugin author's
-    # validated backward-compat line.
-    cd "$PROFILE"
-    pnpm add "@deepseek-ai/dsh@0.1.2-alpha.2"
-
-    # pnpm >=11 writes "set this to true or false" placeholders here when it
-    # blocks a build script; resolve them and enable peer auto-install.
-    cat > pnpm-workspace.yaml <<'YAML'
-    packages:
-      - .
-
-    nodeLinker: hoisted
-    autoInstallPeers: true
-    allowBuilds:
-      '@deepseek-ai/dsh-subprocess-local': true
-      node-pty: true
-      koffi: true
-      '@google/genai': false
-      protobufjs: false
-    YAML
-
-    pnpm install
-
-    echo ""
-    echo "Done! Start it with:  dsh-tui   (alias: dsht)"
-    echo "Resume a session:     dsh-tui --resume <session-id>"
-    echo ""
-    echo "Requires DEEPSEEK_API_KEY in the environment."
+    exec node --expose-internals "$BIN" "$@"
   '';
 
   # Single Cordis "insert" patch adding all six servers, spliced into a
@@ -226,7 +134,7 @@ let
   '';
 in
 lib.mkIf pkgs.stdenv.isDarwin {
-  home.packages = [ dshLauncher dshTuiLauncher dshtShortcut dshTuiSetupScript ];
+  home.packages = [ dshLauncher ];
 
   home.activation.setupDshMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupDshMcpScript}
