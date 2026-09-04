@@ -33,23 +33,41 @@
 # process stays alive past the boot window with zero crash traces.
 #
 # Any dsh plugin runs with the harness's full access (files, network,
-# credentials) and has not been audited, so bootstrap stays an explicit
-# dsh-tui-setup step rather than something activation runs unattended --
-# same reasoning as the airis-mcp-setup / superclaude-setup helpers.
-# Needs DEEPSEEK_API_KEY in the environment; set it like TAVILY_API_KEY.
+# credentials) and has not been audited. The profile self-initializes on
+# first launch and, when absent, during home-manager activation -- no manual
+# step needed. dsh-tui-setup remains for repairs/updates.
+#
+# Model provider is the llm-pi-ai 'openrouter' route the user declares in
+# $DSH_HOME/settings.yaml; OPENROUTER_API_KEY reaches the shell via sops
+# (secrets/default.yaml -> /run/secrets/openrouter-api-key -> fish).
 { config, pkgs, lib, ... }:
 
 let
   lldbMcpServer = pkgs.callPackage ../../../pkgs/lldb-mcp.nix { };
 
-  # Shared body: find the newest npx-cached dsh core (priming once if absent)
-  # and leave $BIN set. `~` is expanded at run time because these scripts are
-  # immutable in the nix store. Each launcher then execs with its own args.
+  # Shared: locate the newest npx-cached dsh core (priming once if absent)
+  # and leave $BIN set, or die with a hint. `~` is expanded at run time
+  # because these scripts are immutable in the nix store.
   dshBootstrap = ''
     BIN="$(ls -t "$HOME"/.npm/_npx/*/node_modules/@deepseek-ai/dsh/lib/bin.js 2>/dev/null | head -1)"
     if [ -z "$BIN" ]; then
       npx -y @deepseek-ai/dsh@0.1.2-rc.1 --version >/dev/null 2>&1
       BIN="$(ls -t "$HOME"/.npm/_npx/*/node_modules/@deepseek-ai/dsh/lib/bin.js 2>/dev/null | head -1)"
+    fi
+    if [ -z "$BIN" ]; then
+      echo "dsh: could not locate the @deepseek-ai/dsh runtime (offline first run?)" >&2
+      exit 1
+    fi
+  '';
+
+  # Shared: if the dsh-tui profile does not yet contain the plugin, create it
+  # with the pairing pnpm refuses but npm installs (see the header comment).
+  # The plugin's own launcher performs the same bootstrap on first run.
+  dshTuiEnsure = ''
+    PROF="$HOME/.dsh/profiles/dsh-tui"
+    if [ ! -d "$PROF/node_modules/@deepseek-harness-tui/dsh-tui" ]; then
+      echo "dsh-tui: first run -- creating the $PROF profile..."
+      node --expose-internals "$BIN" plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
     fi
   '';
 
@@ -60,31 +78,28 @@ let
 
   dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" ''
     ${dshBootstrap}
+    ${dshTuiEnsure}
     exec node --expose-internals "$BIN" --profile dsh-tui "$@"
   '';
 
   dshtShortcut = pkgs.writeShellScriptBin "dsht" ''
     ${dshBootstrap}
+    ${dshTuiEnsure}
     exec node --expose-internals "$BIN" --profile dsh-tui "$@"
   '';
 
+  # Explicit (re)install / repair: also re-runs when the plugin is already
+  # present, so it doubles as the update path.
   dshTuiSetupScript = pkgs.writeShellScriptBin "dsh-tui-setup" ''
     set -euo pipefail
-    echo "Setting up the dsh-tui profile..."
-
-    # Pin the npx cache to the core the plugin is built against, so the
-    # bootstrap below and later launches share one closure.
-    npx -y @deepseek-ai/dsh@0.1.2-rc.1 --version >/dev/null 2>&1
-
-    # Creates ~/.dsh/profiles/dsh-tui with the pinned plugin; the plugin's
-    # own launcher would do the same on first run, this does it explicitly.
-    npx -y @deepseek-ai/dsh@0.1.2-rc.1 plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
-
+    ${dshBootstrap}
+    echo "Installing the dsh-tui plugin into the 'dsh-tui' profile..."
+    node --expose-internals "$BIN" plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
     echo ""
     echo "Done! Start it with:  dsh-tui   (alias: dsht)"
     echo "Resume a session:     dsh-tui --resume <session-id>"
     echo ""
-    echo "Requires DEEPSEEK_API_KEY in the environment."
+    echo "Model provider: llm-pi-ai 'openrouter' (OPENROUTER_API_KEY via sops)."
   '';
 
   # Single Cordis "insert" patch adding all six servers, spliced into a
@@ -182,5 +197,14 @@ lib.mkIf pkgs.stdenv.isDarwin {
 
   home.activation.setupDshMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupDshMcpScript}
+  '';
+
+  # First-run self-setup of the dsh-tui profile. No-op once the plugin is in
+  # place; network-dependent, so failures warn instead of failing the build.
+  home.activation.setupDshTui = lib.hm.dag.entryAfter [ "setupDshMcp" ] ''
+    (
+      ${dshBootstrap}
+      ${dshTuiEnsure}
+    ) || echo "warning: dsh-tui profile not set up (offline?); see dsh-tui-setup" >&2 || true
   '';
 }

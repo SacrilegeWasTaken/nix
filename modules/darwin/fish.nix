@@ -38,6 +38,10 @@
       if test -f /run/secrets/tavily-api-key
         set -gx TAVILY_API_KEY (cat /run/secrets/tavily-api-key)
       end
+      # DeepSeek Harness model provider (llm-pi-ai route in ~/.dsh/settings.yaml)
+      if test -f /run/secrets/openrouter-api-key
+        set -gx OPENROUTER_API_KEY (cat /run/secrets/openrouter-api-key)
+      end
     '';
   };
 

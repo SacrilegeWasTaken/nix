@@ -19,6 +19,12 @@ in
       tavily-api-key = {
         owner = username;
       };
+      # DeepSeek Harness model provider (llm-pi-ai). Exported to the shell as
+      # OPENROUTER_API_KEY in modules/darwin/fish.nix; $DSH_HOME/settings.yaml
+      # references it via apiKeyEnv.
+      openrouter-api-key = {
+        owner = username;
+      };
       # Armored GPG signing private key, imported into the user keyring on
       # activation (see modules/common/home/git.nix).
       gpg-signing-key = {
