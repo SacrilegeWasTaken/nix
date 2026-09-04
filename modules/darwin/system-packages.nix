@@ -34,6 +34,7 @@
     tree
     uv
     nodejs
+    pnpm
     starship
     hexyl
     obsidian
