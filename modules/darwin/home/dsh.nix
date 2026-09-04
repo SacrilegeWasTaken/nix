@@ -46,6 +46,13 @@
 # profile would double-register core's built-in "openai-codex" LLM adapter
 # and fail to boot. Login (ChatGPT OAuth) and quota UI happen in the web app:
 # `dsh web` -> Settings -> Codex.
+#
+# Claude (and Gemini/Qwen) come from the third-party dsh-llm-subscription
+# plugin, also web-only (it registers LLM adapters that collide with the TUI
+# composition). It shells out to the user's own `claude`/`agy`/`ollama` CLIs
+# -- the low-risk variety of bridging a subscription -- and needs `claude
+# login` to have run once. Models (claude/haiku/sonnet/opus/fable, Gemini
+# tiers, local qwen3.5) then appear in the web model picker.
 { config, pkgs, lib, ... }:
 
 let
@@ -90,10 +97,24 @@ let
     fi
   '';
 
+  # Shared: install dsh-llm-subscription (Claude/Gemini/Qwen via the local
+  # claude/agy/ollama CLIs) into the WEB profile when missing. Web-only for
+  # the same reason as codex: it registers LLM adapters that collide with
+  # dsh-tui's composition. Low-risk bridging -- it shells out to the user's
+  # own claude CLI, never touches credentials. Needs `claude login` once.
+  dshLlmSubEnsure = ''
+    PROF="$HOME/.dsh/profiles/web"
+    if [ ! -d "$PROF/node_modules/dsh-llm-subscription" ]; then
+      echo "dsh: installing dsh-llm-subscription into the web profile..."
+      node --expose-internals "$BIN" plugin --profile web add dsh-llm-subscription@0.1.4
+    fi
+  '';
+
   dshLauncher = pkgs.writeShellScriptBin "dsh" ''
     ${dshBootstrap}
     if [ "$#" -ge 1 ] && [ "$1" = "web" ]; then
       ${dshCodexEnsure}
+      ${dshLlmSubEnsure}
     fi
     exec node --expose-internals "$BIN" "$@"
   '';
@@ -244,5 +265,13 @@ lib.mkIf pkgs.stdenv.isDarwin {
       ${dshBootstrap}
       ${dshCodexEnsure}
     ) || echo "warning: dsh-codex-subscription not set up (offline?); see 'dsh web'" >&2 || true
+  '';
+
+  # First-run self-setup of dsh-llm-subscription in the web profile.
+  home.activation.setupDshLlmSub = lib.hm.dag.entryAfter [ "setupDshCodex" ] ''
+    (
+      ${dshBootstrap}
+      ${dshLlmSubEnsure}
+    ) || echo "warning: dsh-llm-subscription not set up (offline?); see 'dsh web'" >&2 || true
   '';
 }
