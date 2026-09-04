@@ -17,15 +17,7 @@
 
 let
   # ---- LLDB MCP server (stass/lldb-mcp, single-file Python script) ----
-  lldbMcpRev = "a610f2d0d3835739c41762352442ba2a13958b38";
-  lldbMcpScript = pkgs.fetchurl {
-    url = "https://raw.githubusercontent.com/stass/lldb-mcp/${lldbMcpRev}/lldb_mcp.py";
-    hash = "sha256-K2ptzfEUga+vPRmOScnExob+DeabVXVTBBnFy7ASCUY=";
-  };
-  lldbMcpPython = pkgs.python3.withPackages (ps: [ ps.mcp ]);
-  lldbMcpServer = pkgs.writeShellScriptBin "lldb-mcp-server" ''
-    exec ${lldbMcpPython}/bin/python3 ${lldbMcpScript} "$@"
-  '';
+  lldbMcpServer = pkgs.callPackage ../../../pkgs/lldb-mcp.nix { };
 
   # ---- direct-mode server definitions (stdio, written to ~/.claude.json) ----
   mcpServers = {
