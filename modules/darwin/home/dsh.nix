@@ -13,6 +13,16 @@
 # Set it in fish: set -Ux TAVILY_API_KEY "tvly-..."
 # dsh strips ambient vars that look like credentials before starting an MCP
 # child, so the key is re-added explicitly via a `!!js` env expression below.
+#
+# ---- TUI front end (dsh-tui/dsh-tui, THIRD-PARTY, not from deepseek-ai) ----
+# dsh ships no terminal UI of its own (only web/headless/sdk/acp profiles).
+# dsh-tui is a community out-of-tree plugin bundle; it, like any dsh plugin,
+# runs with the harness's full access (files, network, credentials) and has
+# not been audited. Bootstrap is therefore a manual step (dsh-tui-setup)
+# rather than something home-manager activation runs unattended -- same
+# reasoning as the airis-mcp-setup / superclaude-setup helpers below.
+# Needs DEEPSEEK_API_KEY in the environment; set it the same way as
+# TAVILY_API_KEY above.
 { config, pkgs, lib, ... }:
 
 let
@@ -20,6 +30,24 @@ let
 
   dshLauncher = pkgs.writeShellScriptBin "dsh" ''
     exec npx -y @deepseek-ai/dsh@latest "$@"
+  '';
+
+  dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" ''
+    exec npx -y @deepseek-ai/dsh@latest --profile tui "$@"
+  '';
+
+  dshTuiSetupScript = pkgs.writeShellScriptBin "dsh-tui-setup" ''
+    set -euo pipefail
+    echo "Installing dsh-tui into the 'tui' dsh profile..."
+    npx -y @deepseek-ai/dsh@latest plugin --profile tui add @dsh-tui/dsh-tui
+
+    echo ""
+    echo "Done! Start it with:  dsh-tui"
+    echo "Resume a session:     dsh-tui --resume <session-id>"
+    echo ""
+    echo "If the install failed on a blocked build script, add the printed"
+    echo "key under allowBuilds in ~/.dsh/profiles/tui/pnpm-workspace.yaml"
+    echo "and re-run dsh-tui-setup."
   '';
 
   # Single Cordis "insert" patch adding all six servers, spliced into a
@@ -113,7 +141,7 @@ let
   '';
 in
 lib.mkIf pkgs.stdenv.isDarwin {
-  home.packages = [ dshLauncher ];
+  home.packages = [ dshLauncher dshTuiLauncher dshTuiSetupScript ];
 
   home.activation.setupDshMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupDshMcpScript}
