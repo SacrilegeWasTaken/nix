@@ -40,6 +40,12 @@
 # Model provider is the llm-pi-ai 'openrouter' route the user declares in
 # $DSH_HOME/settings.yaml; OPENROUTER_API_KEY reaches the shell via sops
 # (secrets/default.yaml -> /run/secrets/openrouter-api-key -> fish).
+#
+# Codex subscriptions (ChatGPT/Codex) come from the third-party
+# dsh-codex-subscription plugin, installed into the WEB profile only: the TUI
+# profile would double-register core's built-in "openai-codex" LLM adapter
+# and fail to boot. Login (ChatGPT OAuth) and quota UI happen in the web app:
+# `dsh web` -> Settings -> Codex.
 { config, pkgs, lib, ... }:
 
 let
@@ -71,8 +77,24 @@ let
     fi
   '';
 
+  # Shared: install dsh-codex-subscription into the WEB profile when missing.
+  # It cannot go into the TUI profile -- dsh-tui's own composition already
+  # registers an "openai-codex" LLM adapter and the plugin would double-
+  # register it ("adapter for provider openai-codex is already registered").
+  # Login and usage happen in the web UI: dsh web -> Settings -> Codex.
+  dshCodexEnsure = ''
+    PROF="$HOME/.dsh/profiles/web"
+    if [ ! -d "$PROF/node_modules/dsh-codex-subscription" ]; then
+      echo "dsh: installing dsh-codex-subscription into the web profile..."
+      node --expose-internals "$BIN" plugin --profile web add dsh-codex-subscription@1.13.1
+    fi
+  '';
+
   dshLauncher = pkgs.writeShellScriptBin "dsh" ''
     ${dshBootstrap}
+    if [ "$#" -ge 1 ] && [ "$1" = "web" ]; then
+      ${dshCodexEnsure}
+    fi
     exec node --expose-internals "$BIN" "$@"
   '';
 
@@ -214,5 +236,13 @@ lib.mkIf pkgs.stdenv.isDarwin {
       ${dshBootstrap}
       ${dshTuiEnsure}
     ) || echo "warning: dsh-tui profile not set up (offline?); see dsh-tui-setup" >&2 || true
+  '';
+
+  # First-run self-setup of dsh-codex-subscription in the web profile.
+  home.activation.setupDshCodex = lib.hm.dag.entryAfter [ "setupDshTui" ] ''
+    (
+      ${dshBootstrap}
+      ${dshCodexEnsure}
+    ) || echo "warning: dsh-codex-subscription not set up (offline?); see 'dsh web'" >&2 || true
   '';
 }
