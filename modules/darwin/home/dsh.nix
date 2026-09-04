@@ -48,11 +48,14 @@
 # `dsh web` -> Settings -> Codex.
 #
 # Claude (and Gemini/Qwen) come from the third-party dsh-llm-subscription
-# plugin, also web-only (it registers LLM adapters that collide with the TUI
-# composition). It shells out to the user's own `claude`/`agy`/`ollama` CLIs
-# -- the low-risk variety of bridging a subscription -- and needs `claude
-# login` to have run once. Models (claude/haiku/sonnet/opus/fable, Gemini
-# tiers, local qwen3.5) then appear in the web model picker.
+# plugin, installed in BOTH the web and the TUI profiles (it registers NEW
+# adapters claude/gemini/qwen, so no adapter collision -- verified with an
+# isolated TUI boot; unlike codex, which re-registers the core's existing
+# "openai-codex" and must stay web-only). It shells out to the user's own
+# `claude`/`agy`/`ollama` CLIs -- the low-risk variety of bridging a
+# subscription -- and needs `claude login` to have run once. Models
+# (claude/haiku/sonnet/opus/fable, Gemini tiers, local qwen3.5) then appear
+# in the web AND TUI model pickers.
 { config, pkgs, lib, ... }:
 
 let
@@ -82,6 +85,10 @@ let
       echo "dsh-tui: first run -- creating the $PROF profile..."
       node --expose-internals "$BIN" plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
     fi
+    if [ ! -d "$PROF/node_modules/dsh-llm-subscription" ]; then
+      echo "dsh-tui: installing dsh-llm-subscription (Claude/Gemini/Qwen via your CLIs)..."
+      node --expose-internals "$BIN" plugin --profile dsh-tui add dsh-llm-subscription@0.1.4
+    fi
   '';
 
   # Shared: install dsh-codex-subscription into the WEB profile when missing.
@@ -98,10 +105,11 @@ let
   '';
 
   # Shared: install dsh-llm-subscription (Claude/Gemini/Qwen via the local
-  # claude/agy/ollama CLIs) into the WEB profile when missing. Web-only for
-  # the same reason as codex: it registers LLM adapters that collide with
-  # dsh-tui's composition. Low-risk bridging -- it shells out to the user's
-  # own claude CLI, never touches credentials. Needs `claude login` once.
+  # claude/agy/ollama CLIs) into the WEB profile when missing. Unlike
+  # codex it is also safe in the TUI profile: it registers NEW LLM provider
+  # adapters (claude/gemini/qwen) rather than re-registering an existing
+  # one, so no "adapter for provider ... already registered" collision
+  # (verified with an isolated TUI boot). Needs `claude login` once.
   dshLlmSubEnsure = ''
     PROF="$HOME/.dsh/profiles/web"
     if [ ! -d "$PROF/node_modules/dsh-llm-subscription" ]; then
