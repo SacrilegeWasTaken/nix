@@ -14,13 +14,23 @@
 # dsh strips ambient vars that look like credentials before starting an MCP
 # child, so the key is re-added explicitly via a `!!js` env expression below.
 #
-# ---- TUI front end (dsh-tui/dsh-tui, THIRD-PARTY, not from deepseek-ai) ----
+# ---- TUI front end (@deepseek-harness-tui/dsh-tui, THIRD-PARTY, not from
+# deepseek-ai) ----
 # dsh ships no terminal UI of its own (only web/headless/sdk/acp profiles).
-# dsh-tui is a community out-of-tree plugin bundle; it, like any dsh plugin,
-# runs with the harness's full access (files, network, credentials) and has
-# not been audited. Bootstrap is therefore a manual step (dsh-tui-setup)
-# rather than something home-manager activation runs unattended -- same
-# reasoning as the airis-mcp-setup / superclaude-setup helpers below.
+# dsh-tui (github.com/ccch1mneyyy/dsh-TUI) is the community out-of-tree
+# plugin bundle chosen for it -- picked over github.com/dsh-tui/dsh-tui
+# (npm @dsh-tui/dsh-tui) because that one pins peer deps to the
+# @deepseek-ai/dsh rc it shipped against (0.1.0-rc.6, 2026-08-14) and never
+# updated, so its own bundled storage/session-projection-cache plugin rows
+# now collide with the identically-named rows dsh-base gained since:
+# `duplicate loader entry id: storage` at boot. This plugin's peer deps
+# explicitly list 0.1.2-rc.1, the version our `dsh` wrapper runs.
+#
+# Like any dsh plugin it runs with the harness's full access (files,
+# network, credentials) and has not been audited. Bootstrap is therefore a
+# manual step (dsh-tui-setup) rather than something home-manager activation
+# runs unattended -- same reasoning as the airis-mcp-setup /
+# superclaude-setup helpers below.
 # Needs DEEPSEEK_API_KEY in the environment; set it the same way as
 # TAVILY_API_KEY above.
 { config, pkgs, lib, ... }:
@@ -33,21 +43,30 @@ let
   '';
 
   dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" ''
-    exec npx -y @deepseek-ai/dsh@latest --profile tui "$@"
+    exec npx -y @deepseek-ai/dsh@latest --profile dsh-tui "$@"
+  '';
+
+  dshtShortcut = pkgs.writeShellScriptBin "dsht" ''
+    exec npx -y @deepseek-ai/dsh@latest --profile dsh-tui "$@"
   '';
 
   dshTuiSetupScript = pkgs.writeShellScriptBin "dsh-tui-setup" ''
     set -euo pipefail
-    echo "Installing dsh-tui into the 'tui' dsh profile..."
-    npx -y @deepseek-ai/dsh@latest plugin --profile tui add @dsh-tui/dsh-tui
+    echo "Installing dsh-tui into the 'dsh-tui' dsh profile..."
+    npx -y @deepseek-ai/dsh@latest plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
 
     echo ""
     echo "Done! Start it with:  dsh-tui"
     echo "Resume a session:     dsh-tui --resume <session-id>"
     echo ""
-    echo "If the install failed on a blocked build script, add the printed"
-    echo "key under allowBuilds in ~/.dsh/profiles/tui/pnpm-workspace.yaml"
-    echo "and re-run dsh-tui-setup."
+    echo "If the install fails with ERR_PNPM_IGNORED_BUILDS (pnpm >=11 blocks"
+    echo "dependencies with install scripts, e.g. @google/genai, protobufjs),"
+    echo "add them under allowBuilds in"
+    echo "~/.dsh/profiles/dsh-tui/pnpm-workspace.yaml:"
+    echo "  allowBuilds:"
+    echo "    '@google/genai': false"
+    echo "    protobufjs: false"
+    echo "then re-run dsh-tui-setup."
   '';
 
   # Single Cordis "insert" patch adding all six servers, spliced into a
@@ -141,7 +160,7 @@ let
   '';
 in
 lib.mkIf pkgs.stdenv.isDarwin {
-  home.packages = [ dshLauncher dshTuiLauncher dshTuiSetupScript ];
+  home.packages = [ dshLauncher dshTuiLauncher dshtShortcut dshTuiSetupScript ];
 
   home.activation.setupDshMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupDshMcpScript}
