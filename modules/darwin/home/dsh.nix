@@ -24,7 +24,23 @@
 # updated, so its own bundled storage/session-projection-cache plugin rows
 # now collide with the identically-named rows dsh-base gained since:
 # `duplicate loader entry id: storage` at boot. This plugin's peer deps
-# explicitly list 0.1.2-rc.1, the version our `dsh` wrapper runs.
+# explicitly list 0.1.2-rc.1.
+#
+# dsh-tui must NOT be booted through the npx wrapper: the loader entry
+# names are bare specifiers (@deepseek-harness-tui/dsh-tui/...) and the
+# npx cache is a separate npm closure, so resolution from
+# @deepseek-ai/cordis-plugin-loader cannot see the plugin installed into
+# the profile -> ERR_MODULE_NOT_FOUND on every entry. Instead the plugin
+# and the @deepseek-ai core are installed into ONE pnpm closure under
+# $DSH_HOME/profiles/dsh-tui (mirroring the upstream `npm i -g` of both)
+# and launched from there. Two more constraints surfaced the hard way:
+#   * autoInstallPeers: true in that profile -- pnpm's default (false)
+#     skips peer deps of the core bundles, e.g. dsh-session-title-llm,
+#     which are not otherwise declared.
+#   * `node --expose-internals` -- the plugin's HMR service refuses to
+#     start without it, and pnpm's bin shim does not pass it.
+# With all three the plugin tree boots and every MCP server comes up
+# (verified against the same cordis.patch.yml used by the web profile).
 #
 # Like any dsh plugin it runs with the harness's full access (files,
 # network, credentials) and has not been audited. Bootstrap is therefore a
@@ -42,31 +58,64 @@ let
     exec npx -y @deepseek-ai/dsh@latest "$@"
   '';
 
-  dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" ''
-    exec npx -y @deepseek-ai/dsh@latest --profile dsh-tui "$@"
+  # Boot the TUI from the profile's own pnpm closure (plugin + core in one
+  # node_modules, see the comment block above). ~ is expanded at run time
+  # because this script is immutable in the nix store.
+  dshTuiRun = ''
+    PROFILE="$HOME/.dsh/profiles/dsh-tui"
+    BIN="$PROFILE/node_modules/@deepseek-ai/dsh/lib/bin.js"
+    if [ ! -x "$(command -v node)" ]; then
+      echo "node not found on PATH" >&2
+      exit 1
+    fi
+    if [ ! -f "$BIN" ]; then
+      echo "dsh-tui profile not set up yet -- run: dsh-tui-setup" >&2
+      exit 1
+    fi
+    exec node --expose-internals "$BIN" --profile dsh-tui "$@"
   '';
 
-  dshtShortcut = pkgs.writeShellScriptBin "dsht" ''
-    exec npx -y @deepseek-ai/dsh@latest --profile dsh-tui "$@"
-  '';
+  dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" dshTuiRun;
+
+  dshtShortcut = pkgs.writeShellScriptBin "dsht" dshTuiRun;
 
   dshTuiSetupScript = pkgs.writeShellScriptBin "dsh-tui-setup" ''
     set -euo pipefail
-    echo "Installing dsh-tui into the 'dsh-tui' dsh profile..."
+    PROFILE="$HOME/.dsh/profiles/dsh-tui"
+    echo "Installing dsh core + dsh-tui into the 'dsh-tui' dsh profile..."
+
+    # Initializes the profile manifest (dsh.profile.bundles) and installs
+    # the plugin into ~/.dsh/profiles/dsh-tui/node_modules.
     npx -y @deepseek-ai/dsh@latest plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
 
+    # Install the @deepseek-ai core into the SAME closure so bare loader
+    # specifiers resolve (see the comment block above).
+    cd "$PROFILE"
+    pnpm add @deepseek-ai/dsh@latest
+
+    # pnpm >=11 writes "set this to true or false" placeholders here when it
+    # blocks a build script; resolve them and enable peer auto-install.
+    cat > pnpm-workspace.yaml <<'YAML'
+    packages:
+      - .
+
+    nodeLinker: hoisted
+    autoInstallPeers: true
+    allowBuilds:
+      '@deepseek-ai/dsh-subprocess-local': true
+      node-pty: true
+      koffi: true
+      '@google/genai': false
+      protobufjs: false
+    YAML
+
+    pnpm install
+
     echo ""
-    echo "Done! Start it with:  dsh-tui"
+    echo "Done! Start it with:  dsh-tui   (alias: dsht)"
     echo "Resume a session:     dsh-tui --resume <session-id>"
     echo ""
-    echo "If the install fails with ERR_PNPM_IGNORED_BUILDS (pnpm >=11 blocks"
-    echo "dependencies with install scripts, e.g. @google/genai, protobufjs),"
-    echo "add them under allowBuilds in"
-    echo "~/.dsh/profiles/dsh-tui/pnpm-workspace.yaml:"
-    echo "  allowBuilds:"
-    echo "    '@google/genai': false"
-    echo "    protobufjs: false"
-    echo "then re-run dsh-tui-setup."
+    echo "Requires DEEPSEEK_API_KEY in the environment."
   '';
 
   # Single Cordis "insert" patch adding all six servers, spliced into a
