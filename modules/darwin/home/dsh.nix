@@ -104,6 +104,14 @@ let
 
   # Single Cordis "insert" patch adding all six servers, spliced into a
   # managed block inside ~/.dsh/cordis.patch.yml (see setupDshMcp below).
+  #
+  # Each stdio server is wrapped in /bin/sh so its stderr -- startup
+  # banners, npm/uvx progress, serena's INFO log -- is appended to a per-
+  # server file under ~/.dsh/logs instead of the terminal, where it would
+  # overwrite the TUI. dsh-mcp-client keeps the child's stderr on the TTY
+  # (no redirect option), and stdout is the MCP protocol, so this shell
+  # wrapper is the only clean way to silence the noise. HOME is not among
+  # the ambient vars the client scrubs, so $HOME expands in the wrapper.
   mcpPatchBlock = pkgs.writeText "dsh-mcp-servers.cordis.yml" ''
     - insert:
         - id: mcp-context7
@@ -111,40 +119,40 @@ let
           config:
             serverName: context7
             transport: stdio
-            command: npx
-            args: ['-y', '@upstash/context7-mcp@latest']
+            command: /bin/sh
+            args: ['-c', 'mkdir -p "$HOME/.dsh/logs" && exec npx -y @upstash/context7-mcp@latest 2>>"$HOME/.dsh/logs/context7.log"']
             env: {}
         - id: mcp-sequential-thinking
           name: '@deepseek-ai/dsh-mcp-client'
           config:
             serverName: sequential-thinking
             transport: stdio
-            command: npx
-            args: ['-y', '@modelcontextprotocol/server-sequential-thinking']
+            command: /bin/sh
+            args: ['-c', 'mkdir -p "$HOME/.dsh/logs" && exec npx -y @modelcontextprotocol/server-sequential-thinking 2>>"$HOME/.dsh/logs/sequential-thinking.log"']
             env: {}
         - id: mcp-playwright
           name: '@deepseek-ai/dsh-mcp-client'
           config:
             serverName: playwright
             transport: stdio
-            command: npx
-            args: ['-y', '@playwright/mcp@latest']
+            command: /bin/sh
+            args: ['-c', 'mkdir -p "$HOME/.dsh/logs" && exec npx -y @playwright/mcp@latest 2>>"$HOME/.dsh/logs/playwright.log"']
             env: {}
         - id: mcp-serena
           name: '@deepseek-ai/dsh-mcp-client'
           config:
             serverName: serena
             transport: stdio
-            command: uvx
-            args: ['--from', 'git+https://github.com/oraios/serena', 'serena', 'start-mcp-server']
+            command: /bin/sh
+            args: ['-c', 'mkdir -p "$HOME/.dsh/logs" && exec uvx --from git+https://github.com/oraios/serena serena start-mcp-server 2>>"$HOME/.dsh/logs/serena.log"']
             env: {}
         - id: mcp-tavily
           name: '@deepseek-ai/dsh-mcp-client'
           config:
             serverName: tavily
             transport: stdio
-            command: npx
-            args: ['-y', 'tavily-mcp@latest']
+            command: /bin/sh
+            args: ['-c', 'mkdir -p "$HOME/.dsh/logs" && exec npx -y tavily-mcp@latest 2>>"$HOME/.dsh/logs/tavily.log"']
             env:
               TAVILY_API_KEY: !!js process.env.TAVILY_API_KEY
         - id: mcp-lldb
@@ -152,8 +160,8 @@ let
           config:
             serverName: lldb
             transport: stdio
-            command: ${lldbMcpServer}/bin/lldb-mcp-server
-            args: []
+            command: /bin/sh
+            args: ['-c', 'mkdir -p "$HOME/.dsh/logs" && exec ${lldbMcpServer}/bin/lldb-mcp-server 2>>"$HOME/.dsh/logs/lldb.log"']
             env: {}
   '';
 
