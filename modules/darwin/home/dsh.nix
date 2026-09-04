@@ -24,7 +24,12 @@
 # updated, so its own bundled storage/session-projection-cache plugin rows
 # now collide with the identically-named rows dsh-base gained since:
 # `duplicate loader entry id: storage` at boot. This plugin's peer deps
-# explicitly list 0.1.2-rc.1.
+# list 0.1.2-alpha.3/4/5, so the profile pins the 0.1.2 ALPHA core -- the
+# current 0.1.2-rc.1 core changed the agent-session shape and crashes the
+# plugin's transcript replay ("events is not iterable"), while the plugin's
+# own newest npm release (beta.5), which does track rc.1, cannot be
+# installed because its peer range @deepseek-ai/dsh-storage@>=0.1.2
+# <0.2.0-0 matches no published version.
 #
 # dsh-tui must NOT be booted through the npx wrapper: the loader entry
 # names are bare specifiers (@deepseek-harness-tui/dsh-tui/...) and the
@@ -89,9 +94,15 @@ let
     npx -y @deepseek-ai/dsh@latest plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui
 
     # Install the @deepseek-ai core into the SAME closure so bare loader
-    # specifiers resolve (see the comment block above).
+    # specifiers resolve (see the comment block above). Pinned to the 0.1.2
+    # alpha line: the plugin's peer deps accept 0.1.2-alpha.3/4/5 but the
+    # current 0.1.2-rc.1 core changed the agent session shape (session.events
+    # is gone / different), crashing the plugin's transcript replay with
+    # "events is not iterable". The plugin's own newest npm release
+    # (0.10.0-beta.5) tracks rc.1 but cannot be installed -- its peer range
+    # @deepseek-ai/dsh-storage@>=0.1.2 <0.2.0-0 matches nothing published.
     cd "$PROFILE"
-    pnpm add @deepseek-ai/dsh@latest
+    pnpm add "@deepseek-ai/dsh@0.1.2-alpha.5"
 
     # pnpm >=11 writes "set this to true or false" placeholders here when it
     # blocks a build script; resolve them and enable peer auto-install.
