@@ -3,7 +3,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [ ./claude-code.nix ];
+  imports = [ ./claude-code.nix ./dsh.nix ];
 
   config = lib.mkIf pkgs.stdenv.isDarwin {
     # ApplePressAndHoldEnabled (set in darwin/00-base.nix via system.defaults)
