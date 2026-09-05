@@ -55,5 +55,6 @@
     yazi
     # zellij comes from home-manager (patched package, see common/home/zellij.nix)
     lazygit
+    gh
   ];
 }
