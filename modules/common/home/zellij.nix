@@ -3,7 +3,7 @@
 {
   programs.zellij = {
     enable = true;
-    # zellij-org/zellij#4542 (rebased onto 0.44.3, extended): parse the KKP
+    # zellij-org/zellij#4542 (rebased onto 0.45.1, extended): parse the KKP
     # base-layout-key field so Ctrl/Alt keybinds work on non-English layouts,
     # and enable the "report all keys" KKP flag inside keybind-driven modes
     # (pane/tab/resize/...) so bare-letter binds work there too, without

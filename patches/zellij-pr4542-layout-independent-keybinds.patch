@@ -185,11 +185,11 @@ index a5cbe1c..aa05fa2 100644
 +    );
 +}
 diff --git a/zellij-client/src/lib.rs b/zellij-client/src/lib.rs
-index a1fcf38..5e7ce34 100644
+index ef41e96..1323dd7 100644
 --- a/zellij-client/src/lib.rs
 +++ b/zellij-client/src/lib.rs
-@@ -51,7 +51,7 @@ const EXIT_ALTERNATE_SCREEN: &str = "\u{1b}[?1049l";
- const ENABLE_BRACKETED_PASTE: &str = "\u{1b}[?2004h";
+@@ -55,7 +55,7 @@ const ENABLE_FOCUS_REPORTING: &str = "\u{1b}[?1004h";
+ const DISABLE_FOCUS_REPORTING: &str = "\u{1b}[?1004l";
  const RESET_STYLE: &str = "\u{1b}[m";
  const SHOW_CURSOR: &str = "\u{1b}[?25h";
 -const ENTER_KITTY_KEYBOARD_MODE: &str = "\u{1b}[>1u";
@@ -198,10 +198,10 @@ index a1fcf38..5e7ce34 100644
  const CLEAR_CLIENT_TERMINAL_ATTRIBUTES: &str = "\u{1b}[?1l\u{1b}=\u{1b}[r\u{1b}[?1000l\u{1b}[?1002l\u{1b}[?1003l\u{1b}[?1005l\u{1b}[?1006l\u{1b}[?12l";
  /// Subscribe to host color-palette theme notifications (CSI 2031). Hosts
 diff --git a/zellij-client/src/web_client/utils.rs b/zellij-client/src/web_client/utils.rs
-index dfc40a8..58cab72 100644
+index edc52f5..c05da07 100644
 --- a/zellij-client/src/web_client/utils.rs
 +++ b/zellij-client/src/web_client/utils.rs
-@@ -63,7 +63,7 @@ pub fn terminal_init_messages() -> Vec<&'static str> {
+@@ -64,7 +64,7 @@ pub fn terminal_init_messages() -> Vec<&'static str> {
      let clear_client_terminal_attributes = "\u{1b}[?1l\u{1b}=\u{1b}[r\u{1b}[?1000l\u{1b}[?1002l\u{1b}[?1003l\u{1b}[?1005l\u{1b}[?1006l\u{1b}[?12l";
      let enter_alternate_screen = "\u{1b}[?1049h";
      let bracketed_paste = "\u{1b}[?2004h";
@@ -211,10 +211,10 @@ index dfc40a8..58cab72 100644
      vec![
          clear_client_terminal_attributes,
 diff --git a/zellij-server/src/screen.rs b/zellij-server/src/screen.rs
-index 35107c0..b1247e8 100644
+index 0f6c5c9..d013cf1 100644
 --- a/zellij-server/src/screen.rs
 +++ b/zellij-server/src/screen.rs
-@@ -1400,6 +1400,15 @@ pub(crate) struct Screen {
+@@ -1570,6 +1570,15 @@ pub(crate) struct Screen {
      #[cfg_attr(test, allow(dead_code))]
      default_layout_name: Option<String>,
      explicitly_disable_kitty_keyboard_protocol: bool,
@@ -227,30 +227,30 @@ index 35107c0..b1247e8 100644
 +    kitty_all_keys_clients: HashSet<ClientId>,
 +    /// Raw sequences queued for specific clients, flushed on next render.
 +    pending_kitty_flag_instructions: Vec<(ClientId, &'static str)>,
+     support_kitty_graphics_protocol: bool,
      default_editor: Option<PathBuf>,
      web_clients_allowed: bool,
-     web_sharing: WebSharing,
-@@ -1584,6 +1593,8 @@ impl Screen {
+@@ -1779,6 +1788,8 @@ impl Screen {
              resurrectable_sessions_cache,
              layout_dir,
              explicitly_disable_kitty_keyboard_protocol,
 +            kitty_all_keys_clients: HashSet::new(),
 +            pending_kitty_flag_instructions: Vec::new(),
+             support_kitty_graphics_protocol,
              default_editor,
              web_clients_allowed,
-             web_sharing,
-@@ -2451,6 +2462,10 @@ impl Screen {
-                 self.osc8_hyperlinks,
+@@ -4195,6 +4206,10 @@ impl Screen {
+                 self.sixel_host_capabilities.clone(),
              );
  
 +            for (client_id, vte_instruction) in self.pending_kitty_flag_instructions.drain(..) {
 +                output.add_pre_vte_instruction_to_client(client_id, vte_instruction);
 +            }
 +
-             let has_ansi_subscribers = self.pane_render_subscribers.values().any(|s| s.ansi);
              output.collect_ansi_pane_contents =
-                 has_ansi_subscribers || self.plugins_need_ansi_pane_contents;
-@@ -3674,6 +3689,44 @@ impl Screen {
+                 self.pane_render_subscribers.values().any(|s| s.ansi);
+ 
+@@ -5987,6 +6002,44 @@ impl Screen {
          Ok(())
      }
  
@@ -295,7 +295,7 @@ index 35107c0..b1247e8 100644
      pub fn change_mode(
          &mut self,
          new_mode: InputMode,
-@@ -3688,6 +3741,7 @@ impl Screen {
+@@ -6001,6 +6054,7 @@ impl Screen {
          let previous_mode = mode_info.mode;
          mode_info.mode = new_mode;
          mode_info.base_mode = base_mode;
@@ -304,10 +304,10 @@ index 35107c0..b1247e8 100644
              mode_info.session_name = Some(self.session_name.clone());
          }
 diff --git a/zellij-utils/src/data.rs b/zellij-utils/src/data.rs
-index 6f10a05..8bffe91 100644
+index b3c84bd..a4e7908 100644
 --- a/zellij-utils/src/data.rs
 +++ b/zellij-utils/src/data.rs
-@@ -465,17 +465,44 @@ impl KeyWithModifier {
+@@ -467,17 +467,44 @@ impl KeyWithModifier {
          self.key_modifiers.insert(KeyModifier::Super);
          self
      }
