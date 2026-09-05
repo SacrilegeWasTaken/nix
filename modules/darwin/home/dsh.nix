@@ -37,6 +37,16 @@
 # first launch and, when absent, during home-manager activation -- no manual
 # step needed. dsh-tui-setup remains for repairs/updates.
 #
+# Two TUI profiles, one launcher each. `dsht` runs the `dsh-tui` profile and
+# is the everyday one. `dsht-gsd` runs the `dsht-gsd` profile, which is the
+# same TUI plus the GSD (Git Ship Done) bundle. The split exists because a
+# bundle is not an optional tool set: GSD's patch layer overrides the
+# agent-loop row, so every session in a profile carrying it boots into the
+# phase loop. GSD also drives git directly and gates on the current branch
+# name, which is wrong for a Sapling checkout (detached HEAD) -- see
+# dshGsdEnsure. Keeping it behind its own command makes the phase loop
+# something chosen, and leaves `dsht` a plain agent.
+#
 # Model provider is the llm-pi-ai 'openrouter' route the user declares in
 # $DSH_HOME/settings.yaml; OPENROUTER_API_KEY reaches the shell via sops
 # (secrets/default.yaml -> /run/secrets/openrouter-api-key -> fish).
@@ -86,23 +96,37 @@ let
     fi
   '';
 
-  # Shared: if the dsh-tui profile does not yet contain the plugin, create it
-  # with the pairing pnpm refuses but npm installs (see the header comment).
-  # The plugin's own launcher performs the same bootstrap on first run.
-  dshTuiEnsure = ''
-    PROF="$HOME/.dsh/profiles/dsh-tui"
+  # Shared: bring the profile named by the argument up to a working TUI -- the
+  # plugin pairing pnpm refuses and npm installs (see the header comment), the
+  # subscription adapters, and the two patches. The plugin's own launcher
+  # performs the same bootstrap on first run.
+  #
+  # Parametrized because there is more than one TUI profile now: `dsht` runs
+  # `dsh-tui` and `dsht-gsd` runs `dsht-gsd`, and they differ in exactly one
+  # thing -- whether the GSD bundle is layered on top. A Nix function for the
+  # same reason dshGsdEnsure is one: the name is known at eval time, and these
+  # blocks are spliced text rather than shell functions that could take an
+  # argument.
+  dshTuiEnsureIn = profName: ''
+    PROF="$HOME/.dsh/profiles/${profName}"
     if [ ! -d "$PROF/node_modules/@deepseek-harness-tui/dsh-tui" ]; then
-      echo "dsh-tui: first run -- creating the $PROF profile..."
-      node --expose-internals "$BIN" plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
+      echo "${profName}: first run -- creating the $PROF profile..."
+      node --expose-internals "$BIN" plugin --profile ${profName} add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
     fi
     if [ ! -d "$PROF/node_modules/dsh-llm-subscription" ]; then
-      echo "dsh-tui: installing dsh-llm-subscription (Claude/Gemini/Qwen via your CLIs)..."
-      node --expose-internals "$BIN" plugin --profile dsh-tui add dsh-llm-subscription@0.1.4
+      echo "${profName}: installing dsh-llm-subscription (Claude/Gemini/Qwen via your CLIs)..."
+      node --expose-internals "$BIN" plugin --profile ${profName} add dsh-llm-subscription@0.1.4
     fi
     ${dshLlmSubPatch}
     ${dshTuiDecstbmPatch}
-    ${dshGsdEnsure "dsh-tui"}
   '';
+
+  # `dsht` / `dsh-tui`: the plain TUI. The removal is the migration for a
+  # profile that carried GSD before the split; it is a no-op afterwards.
+  dshTuiEnsure = (dshTuiEnsureIn "dsh-tui") + (dshGsdRemove "dsh-tui");
+
+  # `dsht-gsd`: the same TUI with the GSD phase loop layered on top.
+  dshGsdTuiEnsure = (dshTuiEnsureIn "dsht-gsd") + (dshGsdEnsure "dsht-gsd");
 
   # Shared: patch dsh-llm-subscription's advertised contextWindow from the
   # hardcoded 200k to 1M so dsh lets sessions grow to Claude's real ceiling.
@@ -229,7 +253,12 @@ let
   #
   # GSD drives `git` directly (phase branches, commits, best-effort pushes)
   # and `gh pr create` on ship, so it does not follow this repo's Sapling
-  # workflow -- do not let it own commits here.
+  # workflow -- do not let it own commits here. That is also why it no longer
+  # sits in the everyday TUI profile: a bundle that overrides the agent loop
+  # cannot be ignored session by session, and its branch gate fails outright
+  # on the detached HEAD that Sapling leaves behind. It has its own profile
+  # and its own launcher (`dsht-gsd`) instead, so choosing the phase loop is
+  # choosing which command to type.
   # A Nix function, not a shell function: the profile name is known at eval
   # time for every call site, so it is spliced in literally here rather than
   # read from a shell positional parameter. `${dshGsdEnsure} dsh-tui` (the
@@ -241,6 +270,19 @@ let
     if [ ! -d "$HOME/.dsh/profiles/${profName}/node_modules/@dsh-gsd/bundle" ]; then
       echo "dsh: installing the GSD bundle into the ${profName} profile..."
       node --expose-internals "$BIN" plugin --profile "${profName}" add @dsh-gsd/bundle@3.0.0
+    fi
+  '';
+
+  # Shared: take the GSD bundle back out of the profile named by the argument.
+  # `dsh plugin` forwards to pnpm and then reconciles `dsh.profile.bundles`
+  # from the installed state, so one `remove` drops both the dependency and
+  # the layer -- deleting the directory by hand would leave the profile
+  # manifest naming a bundle that is no longer there. Idempotent: the profile
+  # that never had it is not touched.
+  dshGsdRemove = profName: ''
+    if [ -d "$HOME/.dsh/profiles/${profName}/node_modules/@dsh-gsd/bundle" ]; then
+      echo "dsh: removing the GSD bundle from the ${profName} profile (it lives in dsht-gsd now)..."
+      node --expose-internals "$BIN" plugin --profile "${profName}" remove @dsh-gsd/bundle
     fi
   '';
 
@@ -283,6 +325,22 @@ let
     ${dshTuiEnsure}
     ${dshTuiPermissionMode}
     exec node --expose-internals "$BIN" --profile dsh-tui "$@"
+  '';
+
+  # The GSD front end: same TUI, same permissions, its own profile. Separate
+  # rather than a flag on `dsht`, because a bundle is a property of the
+  # profile -- GSD's patch layer overrides the agent-loop row, so a session
+  # either boots into the phase loop or does not, and nothing decided at the
+  # command line can change that afterwards.
+  #
+  # The profile self-initializes here on first launch, like the TUI one, and
+  # is deliberately NOT created during activation: a machine that never runs
+  # this command should not pay for a bundle it does not use.
+  dshtGsdShortcut = pkgs.writeShellScriptBin "dsht-gsd" ''
+    ${dshBootstrap}
+    ${dshGsdTuiEnsure}
+    ${dshTuiPermissionMode}
+    exec node --expose-internals "$BIN" --profile dsht-gsd "$@"
   '';
 
   # Explicit (re)install / repair: also re-runs when the plugin is already
@@ -414,7 +472,7 @@ let
   '';
 in
 lib.mkIf pkgs.stdenv.isDarwin {
-  home.packages = [ dshLauncher dshTuiLauncher dshtShortcut dshTuiSetupScript ];
+  home.packages = [ dshLauncher dshTuiLauncher dshtShortcut dshtGsdShortcut dshTuiSetupScript ];
 
   home.activation.setupDshMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupDshMcpScript}
@@ -445,13 +503,15 @@ lib.mkIf pkgs.stdenv.isDarwin {
     ) || echo "warning: dsh-llm-subscription not set up (offline?); see 'dsh web'" >&2 || true
   '';
 
-  # First-run self-setup of the GSD workflow bundle in both standard profiles.
+  # First-run self-setup of the GSD workflow bundle in the web profile. The
+  # TUI side is not here any more: `dsh-tui` has GSD taken out of it by
+  # setupDshTui above, and the `dsht-gsd` profile is built by its own launcher
+  # on first use rather than by every activation.
   home.activation.setupDshGsd = lib.hm.dag.entryAfter [ "setupDshLlmSub" ] ''
     (
       ${dshBootstrap}
       ${dshGsdEnsure "web"}
-      ${dshGsdEnsure "dsh-tui"}
-    ) || echo "warning: GSD bundle not set up (offline?); see 'dsh web' / 'dsht'" >&2 || true
+    ) || echo "warning: GSD bundle not set up (offline?); see 'dsh web'" >&2 || true
   '';
 
   # dsh reads a GLOBAL instruction file from its harness home:
