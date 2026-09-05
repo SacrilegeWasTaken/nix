@@ -45,6 +45,7 @@
     telegram-desktop
     clang-tools
     claude-code
+    codex
     alacritty
     kitty
     sops
