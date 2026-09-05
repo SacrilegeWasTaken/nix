@@ -56,7 +56,7 @@
 # subscription -- and needs `claude login` to have run once. Models
 # (claude/haiku/sonnet/opus/fable, Gemini tiers, local qwen3.5) then appear
 # in the web AND TUI model pickers.
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, username, ... }:
 
 let
   lldbMcpServer = pkgs.callPackage ../../../pkgs/lldb-mcp.nix { };
@@ -153,8 +153,13 @@ let
     echo "Model provider: llm-pi-ai 'openrouter' (OPENROUTER_API_KEY via sops)."
   '';
 
-  # Single Cordis "insert" patch adding all six servers, spliced into a
-  # managed block inside ~/.dsh/cordis.patch.yml (see setupDshMcp below).
+  # Single managed patch block spliced into ~/.dsh/cordis.patch.yml (see
+  # setupDshMcp below). Two kinds of patches, applied to every profile:
+  #   * a replace that re-enables core's dsh-agent-instructions, which dsh-base
+  #     ships disabled:true. That plugin is what makes dsh read AGENTS.md /
+  #     CLAUDE.md from the workspace (and AGENTS.md from the harness home), so
+  #     without it dsh never sees CLAUDE.md files.
+  #   * an insert adding all six MCP servers.
   #
   # Each stdio server is wrapped in /bin/sh so its stderr -- startup
   # banners, npm/uvx progress, serena's INFO log -- is appended to a per-
@@ -163,7 +168,11 @@ let
   # (no redirect option), and stdout is the MCP protocol, so this shell
   # wrapper is the only clean way to silence the noise. HOME is not among
   # the ambient vars the client scrubs, so $HOME expands in the wrapper.
-  mcpPatchBlock = pkgs.writeText "dsh-mcp-servers.cordis.yml" ''
+  dshPatchBlock = pkgs.writeText "dsh-cordis-patch.yml" ''
+    - id: agent-instructions
+      config:
+        maxBytes: 65536
+      disabled: false
     - insert:
         - id: mcp-context7
           name: '@deepseek-ai/dsh-mcp-client'
@@ -216,7 +225,7 @@ let
             env: {}
   '';
 
-  # Splices mcpPatchBlock into ~/.dsh/cordis.patch.yml between marker
+  # Splices dshPatchBlock into ~/.dsh/cordis.patch.yml between marker
   # comments, replacing a previous run's block in place instead of
   # duplicating entries or clobbering any patches the user added by hand.
   setupDshMcpScript = pkgs.writeScript "setup-dsh-mcp" ''
@@ -227,10 +236,10 @@ let
     os.makedirs(dsh_home, exist_ok=True)
     patch_path = os.path.join(dsh_home, "cordis.patch.yml")
 
-    BEGIN = "# >>> nix-managed dsh MCP servers (Darwin flake: modules/darwin/home/dsh.nix) >>>"
-    END = "# <<< nix-managed dsh MCP servers <<<"
+    BEGIN = "# >>> nix-managed dsh patch layer (Darwin flake: modules/darwin/home/dsh.nix) >>>"
+    END = "# <<< nix-managed dsh patch layer <<<"
 
-    with open("${mcpPatchBlock}") as f:
+    with open("${dshPatchBlock}") as f:
         block = f.read().rstrip("\n")
     managed = BEGIN + "\n" + block + "\n" + END
 
@@ -282,4 +291,12 @@ lib.mkIf pkgs.stdenv.isDarwin {
       ${dshLlmSubEnsure}
     ) || echo "warning: dsh-llm-subscription not set up (offline?); see 'dsh web'" >&2 || true
   '';
+
+  # dsh reads a GLOBAL instruction file from its harness home:
+  # ~/.dsh/AGENTS.md (agent-instructions only honors AGENTS.md there). Link
+  # it to Claude Code's global CLAUDE.md so dsh and Claude Code share the
+  # same global instructions. The simlink target is the user's Claude Code
+  # global file (exists from their claude login; if absent, home-manager's
+  # dangling link is acceptable -- dsh simply sees no global file).
+  home.file.".dsh/AGENTS.md".source = "/Users/${username}/.claude/CLAUDE.md";
 }
