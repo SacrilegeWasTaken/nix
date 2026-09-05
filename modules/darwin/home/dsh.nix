@@ -37,6 +37,12 @@
 # first launch and, when absent, during home-manager activation -- no manual
 # step needed. dsh-tui-setup remains for repairs/updates.
 #
+# Both TUI profiles carry dsh-superclaude, which adds one command --
+# `/sc <command> [argument]` -- and nothing else: the SuperClaude command
+# briefs, vendored, expanded into the agent's next turn. It is ours
+# (codeberg.org/sacrilegewastaken/dsh-superclaude), pinned by commit below,
+# and installed by the launcher because cloning it needs the user's ssh key.
+#
 # Two TUI profiles, one launcher each. `dsht` runs the `dsh-tui` profile and
 # is the everyday one. `dsht-gsd` runs the `dsht-gsd` profile, which is the
 # same TUI plus the GSD (Git Ship Done) bundle. The split exists because a
@@ -119,7 +125,34 @@ let
     fi
     ${dshLlmSubPatch}
     ${dshTuiDecstbmPatch}
+    ${dshSuperClaudeEnsure profName}
   '';
+
+  # Shared: install the SuperClaude command bundle into the profile named by
+  # the argument, giving that profile `/sc <command> [argument]`.
+  #
+  # Not on npm -- it is ours (codeberg), so the spec is the git URL and pnpm
+  # clones it. Pinned to a commit rather than a branch: an install that
+  # silently follows `main` is not a configuration, and the existence check
+  # below would never notice it moved anyway. Bumping is an edit here plus one
+  # `dsh plugin --profile <p> add <url>#<sha>` (or removing the directory), the
+  # same shape as GSD's version pin.
+  #
+  # The clone needs the user's ssh key. It runs from the launcher rather than
+  # from activation for exactly that reason: a key behind a passphrase prompt
+  # belongs in a terminal the user is sitting at, not in a home-manager
+  # switch.
+  dshSuperClaudeEnsure = profName: ''
+    if [ ! -d "$HOME/.dsh/profiles/${profName}/node_modules/dsh-superclaude" ]; then
+      echo "${profName}: installing dsh-superclaude (the /sc command set)..."
+      node --expose-internals "$BIN" plugin --profile "${profName}" add \
+        "git+ssh://git@codeberg.org/sacrilegewastaken/dsh-superclaude.git#${dshSuperClaudeRev}" \
+        || echo "${profName}: dsh-superclaude not installed (offline, or no ssh key?) -- /sc will be absent" >&2
+    fi
+  '';
+
+  # The pinned dsh-superclaude commit. Bump deliberately; see the ensure block.
+  dshSuperClaudeRev = "2a262ac10bc75adbc573bc01fb72431d01dae2a8";
 
   # `dsht` / `dsh-tui`: the plain TUI. The removal is the migration for a
   # profile that carried GSD before the split; it is a no-op afterwards.
