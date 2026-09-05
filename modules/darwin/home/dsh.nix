@@ -167,6 +167,45 @@ let
     ${dshLlmSubPatch} "$PROF"
   '';
 
+  # Custom profiles start with dsh-base only. The web bundle must be seeded
+  # from the runtime's in-box package instead of pnpm-installed, then GSD can
+  # override the agent loop without affecting ordinary web or TUI sessions.
+  dshGsdProfileBundles = ''
+    "${pkgs.python3}"/bin/python3 - "$PROF/package.json" <<'PY'
+    import json
+    import os
+    import sys
+
+    path = sys.argv[1]
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    profile = data.setdefault("dsh", {}).setdefault("profile", {})
+    bundles = [
+        "@deepseek-ai/dsh-base",
+        "@deepseek-ai/dsh-web-app",
+        "@dsh-gsd/bundle",
+    ]
+    if profile.get("bundles") != bundles:
+        profile["bundles"] = bundles
+        temp_path = path + ".tmp"
+        with open(temp_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
+        os.replace(temp_path, path)
+    PY
+  '';
+
+  dshGsdEnsure = ''
+    set -e
+    PROF="$HOME/.dsh/profiles/dsh-gsd"
+    if [ ! -d "$PROF/node_modules/@dsh-gsd/bundle" ]; then
+      echo "dsh-gsd: installing the GSD bundle..."
+      node --expose-internals "$BIN" plugin --profile dsh-gsd add @dsh-gsd/bundle@3.0.0
+    fi
+    ${dshGsdProfileBundles}
+  '';
+
   dshLauncher = pkgs.writeShellScriptBin "dsh" ''
     ${dshBootstrap}
     if [ "$#" -ge 1 ] && [ "$1" = "web" ]; then
@@ -174,6 +213,12 @@ let
       ${dshLlmSubEnsure}
     fi
     exec node --expose-internals "$BIN" "$@"
+  '';
+
+  dshGsdLauncher = pkgs.writeShellScriptBin "dsh-gsd" ''
+    ${dshBootstrap}
+    ${dshGsdEnsure}
+    exec node --expose-internals "$BIN" --profile dsh-gsd "$@"
   '';
 
   dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" ''
@@ -310,7 +355,7 @@ let
   '';
 in
 lib.mkIf pkgs.stdenv.isDarwin {
-  home.packages = [ dshLauncher dshTuiLauncher dshtShortcut dshTuiSetupScript ];
+  home.packages = [ dshLauncher dshGsdLauncher dshTuiLauncher dshtShortcut dshTuiSetupScript ];
 
   home.activation.setupDshMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupDshMcpScript}
@@ -339,6 +384,14 @@ lib.mkIf pkgs.stdenv.isDarwin {
       ${dshBootstrap}
       ${dshLlmSubEnsure}
     ) || echo "warning: dsh-llm-subscription not set up (offline?); see 'dsh web'" >&2 || true
+  '';
+
+  # First-run self-setup of the GSD workflow bundle in its opt-in profile.
+  home.activation.setupDshGsd = lib.hm.dag.entryAfter [ "setupDshMcp" ] ''
+    (
+      ${dshBootstrap}
+      ${dshGsdEnsure}
+    ) || echo "warning: GSD bundle not set up (offline?); see 'dsh-gsd'" >&2 || true
   '';
 
   # dsh reads a GLOBAL instruction file from its harness home:
