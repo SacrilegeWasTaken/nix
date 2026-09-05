@@ -66,6 +66,11 @@
 let
   lldbMcpServer = pkgs.callPackage ../../../pkgs/lldb-mcp.nix { };
 
+  # The `/subscription-limits` slash command. Loaded straight from its store
+  # path, so it needs no pnpm install into a profile.
+  subscriptionLimitsCommand =
+    pkgs.callPackage ../../../pkgs/dsh-command-subscription-limits { };
+
   # Shared: locate the newest npx-cached dsh core (priming once if absent)
   # and leave $BIN set, or die with a hint. `~` is expanded at run time
   # because these scripts are immutable in the nix store.
@@ -241,7 +246,10 @@ let
   #     ships disabled:true. That plugin is what makes dsh read AGENTS.md /
   #     CLAUDE.md from the workspace (and AGENTS.md from the harness home), so
   #     without it dsh never sees CLAUDE.md files.
-  #   * an insert adding all six MCP servers.
+  #   * an insert adding all six MCP servers, plus the local
+  #     `/subscription-limits` command plugin. A plugin row's `name` is an
+  #     import specifier resolved against the profile root, so an absolute
+  #     store path mounts a plugin that lives outside any node_modules.
   #
   # Each stdio server is wrapped in /bin/sh so its stderr -- startup
   # banners, npm/uvx progress, serena's INFO log -- is appended to a per-
@@ -256,6 +264,8 @@ let
         maxBytes: 65536
       disabled: false
     - insert:
+        - id: command-subscription-limits
+          name: '${subscriptionLimitsCommand}/lib/index.js'
         - id: mcp-context7
           name: '@deepseek-ai/dsh-mcp-client'
           config:
