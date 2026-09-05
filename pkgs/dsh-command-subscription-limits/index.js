@@ -1,9 +1,13 @@
 /**
- * `/subscription-limits` -- one line per usage window of every subscription the
- * harness holds credentials for: Anthropic (Claude) and OpenAI (Codex).
+ * `/subscription-limits` -- how much of every subscription the harness holds
+ * credentials for is still available: Anthropic (Claude) and OpenAI (Codex).
+ *
+ * The report is a single line because a command result is rendered as a
+ * transient notification rather than a transcript entry, and both the TUI and
+ * the web client collapse it to one line: a multi-line table arrives unreadable.
  *
  * The two providers are polled independently and a provider that cannot answer
- * degrades to a single explanatory line instead of failing the command. These
+ * degrades to a short explanatory clause instead of failing the command. These
  * are the undocumented endpoints the official clients call, so a missing login,
  * an expired token, a rejected credential, or a changed payload has to read as
  * a diagnosis rather than a stack trace.
@@ -19,7 +23,6 @@ const name = "command-subscription-limits";
 const inject = ["commands"];
 
 const REQUEST_TIMEOUT_MS = 10000;
-const BAR_CELLS = 10;
 
 const ANTHROPIC_OAUTH_HEADERS = { "anthropic-beta": "oauth-2025-04-20" };
 const ANTHROPIC_USAGE_URL = "https://api.anthropic.com/api/oauth/usage";
@@ -256,24 +259,17 @@ function formatDistance(moment) {
   return minutes > 0 ? `${minutes}m` : `${seconds}s`;
 }
 
-function renderBar(percent) {
-  const filled = Math.max(0, Math.min(BAR_CELLS, Math.round((percent / 100) * BAR_CELLS)));
-  return "\u2588".repeat(filled) + "\u2591".repeat(BAR_CELLS - filled);
-}
-
 /**
- * One window line: bar, rounded percentage, and when it rolls over.
+ * One window as `5h 21% left (2h22m)`: what is left rather than what is spent,
+ * since the question the command answers is how much room remains.
  * @param {Window} window - the window to render.
- * @returns {string} an indented report line.
+ * @returns {string} one clause of a provider's report.
  */
 function renderWindow(window) {
-  const percent = `${Math.round(window.percent)}%`.padStart(4);
-  const exhausted = window.percent >= 100 ? "limit reached, " : "";
+  const state =
+    window.percent >= 100 ? "exhausted" : `${Math.max(0, 100 - Math.round(window.percent))}% left`;
   const distance = window.resetsAt ? formatDistance(window.resetsAt) : undefined;
-  const reset = window.resetsAt
-    ? `${exhausted}resets ${formatMoment(window.resetsAt)}${distance ? ` (in ${distance})` : ""}`
-    : `${exhausted}reset time not reported`;
-  return `  ${window.label.padEnd(3)} ${renderBar(window.percent)} ${percent}  ${reset}`;
+  return `${window.label} ${state}${distance ? ` (${distance})` : ""}`;
 }
 
 /**
@@ -295,7 +291,7 @@ async function pollProvider(provider) {
 function renderOutcome({ provider, usage, failure }) {
   if (!usage) return `${provider.label}: ${failure}`;
   const heading = usage.plan ? `${provider.label} (${usage.plan})` : provider.label;
-  return [heading, ...usage.windows.map(renderWindow)].join("\n");
+  return `${heading} ${usage.windows.map(renderWindow).join(" \u00b7 ")}`;
 }
 
 /**
@@ -307,7 +303,7 @@ async function executeSubscriptionLimits() {
   const outcomes = await Promise.all(PROVIDERS.map(pollProvider));
   return {
     kind: outcomes.some((outcome) => outcome.usage) ? "success" : "error",
-    text: outcomes.map(renderOutcome).join("\n"),
+    text: outcomes.map(renderOutcome).join(" | "),
   };
 }
 
