@@ -39,7 +39,9 @@
 #
 # Model provider is the llm-pi-ai 'openrouter' route the user declares in
 # $DSH_HOME/settings.yaml; OPENROUTER_API_KEY reaches the shell via sops
-# (secrets/default.yaml -> /run/secrets/openrouter-api-key -> fish).
+# (secrets/default.yaml -> /run/secrets/openrouter-api-key -> fish). Which
+# model a fresh session starts on is a separate key in that same document,
+# seeded by setupDshAgentModelScript below.
 #
 # Codex subscriptions (ChatGPT/Codex) come from the third-party
 # dsh-codex-subscription plugin, installed into the WEB profile only: the TUI
@@ -302,6 +304,38 @@ let
             env: {}
   '';
 
+  # Seeds the model a freshly created top-level agent starts on, for the
+  # sessions an entry point creates without a selection of their own: the
+  # `gsd` startup agent, headless runs, and new web sessions. Subagents never
+  # consult it -- the in-process spawn backend inherits the parent's provider,
+  # model, and reasoning effort -- so this only decides where a fresh session
+  # begins, not what delegated work runs on.
+  #
+  # Written only when the section is absent: the `/model` picker persists its
+  # choice into this same key, and overwriting it on every activation would
+  # revert that choice.
+  setupDshAgentModelScript = pkgs.writeScript "setup-dsh-agent-model" ''
+    #!${pkgs.python3}/bin/python3
+    import os
+    import re
+
+    dsh_home = os.path.expanduser("~/.dsh")
+    os.makedirs(dsh_home, exist_ok=True)
+    settings_path = os.path.join(dsh_home, "settings.yaml")
+
+    DEFAULT = "agent-default-model:\n  provider: anthropic\n  model: claude-sonnet-5\n"
+
+    content = ""
+    if os.path.exists(settings_path):
+        with open(settings_path) as f:
+            content = f.read()
+
+    if re.search(r"(?m)^agent-default-model:\s*(?:#.*)?$", content) is None:
+        sep = "\n" if content and not content.endswith("\n") else ""
+        with open(settings_path, "w") as f:
+            f.write(content + sep + DEFAULT)
+  '';
+
   # Splices dshPatchBlock into ~/.dsh/cordis.patch.yml between marker
   # comments, replacing a previous run's block in place instead of
   # duplicating entries or clobbering any patches the user added by hand.
@@ -376,6 +410,12 @@ lib.mkIf pkgs.stdenv.isDarwin {
       ${dshGsdEnsure "web"}
       ${dshGsdEnsure "dsh-tui"}
     ) || echo "warning: GSD bundle not set up (offline?); see 'dsh web' / 'dsht'" >&2 || true
+  '';
+
+  # Default model for freshly created sessions. Local-only, so it runs
+  # regardless of network reachability.
+  home.activation.setupDshAgentModel = lib.hm.dag.entryAfter [ "setupDshGsd" ] ''
+    ${setupDshAgentModelScript}
   '';
 
   # dsh reads a GLOBAL instruction file from its harness home:
