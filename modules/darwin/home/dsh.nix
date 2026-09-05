@@ -111,6 +111,33 @@ let
     fi
   '';
 
+  # Give Codex's GPT-5.6 variants their supported 1M-token window on first
+  # setup. Preserve an explicit choice made later in the Codex settings UI.
+  dshCodexContextDefault = ''
+    "${pkgs.python3}"/bin/python3 - "$HOME/.dsh/settings.yaml" <<'PY'
+    from pathlib import Path
+    import re
+    import sys
+
+    path = Path(sys.argv[1])
+    text = path.read_text() if path.exists() else ""
+    section = re.search(r"(?m)^codex-subscription:\s*(?:#.*)?$", text)
+
+    if section is None:
+        suffix = "" if not text or text.endswith("\n") else "\n"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"{text}{suffix}codex-subscription:\n  contextMode: extended\n")
+    else:
+        tail = text[section.end():]
+        next_section = re.search(r"(?m)^[^\s#][^:\n]*:\s*", tail)
+        body_end = section.end() + (next_section.start() if next_section else len(tail))
+        body = text[section.end():body_end]
+        if not re.search(r"(?m)^\s+contextMode:\s*", body):
+            text = f"{text[:section.end()]}\n  contextMode: extended{text[section.end():]}"
+            path.write_text(text)
+    PY
+  '';
+
   # Shared: install dsh-codex-subscription into the WEB profile when missing.
   # It cannot go into the TUI profile -- dsh-tui's own composition already
   # registers an "openai-codex" LLM adapter and the plugin would double-
@@ -122,6 +149,7 @@ let
       echo "dsh: installing dsh-codex-subscription into the web profile..."
       node --expose-internals "$BIN" plugin --profile web add dsh-codex-subscription@1.13.1
     fi
+    ${dshCodexContextDefault}
   '';
 
   # Shared: install dsh-llm-subscription (Claude/Gemini/Qwen via the local
