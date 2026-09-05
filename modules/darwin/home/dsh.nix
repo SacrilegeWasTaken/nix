@@ -89,17 +89,19 @@ let
       echo "dsh-tui: installing dsh-llm-subscription (Claude/Gemini/Qwen via your CLIs)..."
       node --expose-internals "$BIN" plugin --profile dsh-tui add dsh-llm-subscription@0.1.4
     fi
-    ${dshLlmSubPatch} "$PROF"
-    ${dshGsdEnsure} dsh-tui
+    ${dshLlmSubPatch}
+    ${dshGsdEnsure "dsh-tui"}
   '';
 
   # Shared: patch dsh-llm-subscription's advertised contextWindow from the
   # hardcoded 200k to 1M so dsh lets sessions grow to Claude's real ceiling.
   # The plugin has no config knob for this; the value lives in its lib, so we
   # rewrite it after install. Idempotent (only touches files still at 200k).
+  # Reads the profile path from $PROF, which every call site sets just
+  # before invoking this block (not a real shell function, so it cannot
+  # take a positional argument -- see the dshGsdEnsure comment below).
   dshLlmSubPatch = ''
-    _p="$1"
-    _f="$_p/node_modules/dsh-llm-subscription/lib/index.js"
+    _f="$PROF/node_modules/dsh-llm-subscription/lib/index.js"
     if [ -f "$_f" ] && grep -q "contextWindow: 200000" "$_f"; then
       "${pkgs.python3}"/bin/python3 - "$_f" <<'PY'
     import sys
@@ -108,7 +110,7 @@ let
     s = s.replace("contextWindow: 200000", "contextWindow: 1000000")
     open(p, "w").write(s)
     PY
-      echo "dsh-llm-subscription: bumped contextWindow to 1M ($_p)"
+      echo "dsh-llm-subscription: bumped contextWindow to 1M ($PROF)"
     fi
   '';
 
@@ -165,7 +167,7 @@ let
       echo "dsh: installing dsh-llm-subscription into the web profile..."
       node --expose-internals "$BIN" plugin --profile web add dsh-llm-subscription@0.1.4
     fi
-    ${dshLlmSubPatch} "$PROF"
+    ${dshLlmSubPatch}
   '';
 
   # Shared: install the GSD (Git Ship Done) bundle into the profile named by
@@ -178,11 +180,17 @@ let
   # GSD drives `git` directly (phase branches, commits, best-effort pushes)
   # and `gh pr create` on ship, so it does not follow this repo's Sapling
   # workflow -- do not let it own commits here.
-  dshGsdEnsure = ''
-    _prof="$1"
-    if [ ! -d "$HOME/.dsh/profiles/$_prof/node_modules/@dsh-gsd/bundle" ]; then
-      echo "dsh: installing the GSD bundle into the $_prof profile..."
-      node --expose-internals "$BIN" plugin --profile "$_prof" add @dsh-gsd/bundle@3.0.0
+  # A Nix function, not a shell function: the profile name is known at eval
+  # time for every call site, so it is spliced in literally here rather than
+  # read from a shell positional parameter. `${dshGsdEnsure} dsh-tui` (the
+  # previous shape) is plain string concatenation, not a function call --
+  # the trailing "dsh-tui"/"web" text just became a stray extra command
+  # appended to the script, and since dsh-tui's own launcher is also named
+  # "dsh-tui", that stray line recursively re-invoked itself.
+  dshGsdEnsure = profName: ''
+    if [ ! -d "$HOME/.dsh/profiles/${profName}/node_modules/@dsh-gsd/bundle" ]; then
+      echo "dsh: installing the GSD bundle into the ${profName} profile..."
+      node --expose-internals "$BIN" plugin --profile "${profName}" add @dsh-gsd/bundle@3.0.0
     fi
   '';
 
@@ -191,7 +199,7 @@ let
     if [ "$#" -ge 1 ] && [ "$1" = "web" ]; then
       ${dshCodexEnsure}
       ${dshLlmSubEnsure}
-      ${dshGsdEnsure} web
+      ${dshGsdEnsure "web"}
     fi
     exec node --expose-internals "$BIN" "$@"
   '';
@@ -365,8 +373,8 @@ lib.mkIf pkgs.stdenv.isDarwin {
   home.activation.setupDshGsd = lib.hm.dag.entryAfter [ "setupDshLlmSub" ] ''
     (
       ${dshBootstrap}
-      ${dshGsdEnsure} web
-      ${dshGsdEnsure} dsh-tui
+      ${dshGsdEnsure "web"}
+      ${dshGsdEnsure "dsh-tui"}
     ) || echo "warning: GSD bundle not set up (offline?); see 'dsh web' / 'dsht'" >&2 || true
   '';
 
