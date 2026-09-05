@@ -254,15 +254,34 @@ let
     exec node --expose-internals "$BIN" "$@"
   '';
 
+  # The TUI runs with the file sandbox disabled, by explicit decision: `dsht`
+  # is the surface used for work that reaches outside the session workspace
+  # (GPG keyring, ~/.ssh, keychain-backed pushes), where a per-command
+  # escalation prompt interrupts the flow. dsh-base defaults the row to
+  # `mode: process.env.DSH_PERMISSION_MODE ?? 'workspace-write'`, so exporting
+  # the variable is the whole mechanism.
+  #
+  # Scoped to the TUI on purpose: `dsh web` keeps the workspace-write default,
+  # so this is not a global relaxation. The agent's blast radius here is the
+  # entire home directory -- including files no revert brings back -- so keep
+  # the risky, unattended work on the web profile.
+  #
+  # Narrowable per invocation: `DSH_PERMISSION_MODE=workspace-write dsht`.
+  dshTuiPermissionMode = ''
+    export DSH_PERMISSION_MODE="''${DSH_PERMISSION_MODE:-danger-full-access}"
+  '';
+
   dshTuiLauncher = pkgs.writeShellScriptBin "dsh-tui" ''
     ${dshBootstrap}
     ${dshTuiEnsure}
+    ${dshTuiPermissionMode}
     exec node --expose-internals "$BIN" --profile dsh-tui "$@"
   '';
 
   dshtShortcut = pkgs.writeShellScriptBin "dsht" ''
     ${dshBootstrap}
     ${dshTuiEnsure}
+    ${dshTuiPermissionMode}
     exec node --expose-internals "$BIN" --profile dsh-tui "$@"
   '';
 
