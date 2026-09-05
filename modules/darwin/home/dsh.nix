@@ -141,8 +141,8 @@ let
   # DECSTBM path is withdrawn -- zellij implements DEC 2026 properly, so
   # BSU/ESU stay on and frames remain atomic.
   #
-  # Sent upstream as ccch1mneyyy/dsh-TUI "fix(ink): disable DECSTBM hardware
-  # scroll inside zellij"; drop this block once a release carries the fix.
+  # Sent upstream as ccch1mneyyy/dsh-TUI#766 "fix(ink): disable DECSTBM
+  # hardware scroll inside zellij"; drop this block once a release carries it.
   # Idempotent, and loud-but-harmless if a future version changes the body.
   dshTuiDecstbmPatch = ''
     _f="$PROF/node_modules/@deepseek-harness-tui/dsh-tui/lib/types/ink/terminal.js"
