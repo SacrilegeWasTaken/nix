@@ -100,6 +100,7 @@ let
       node --expose-internals "$BIN" plugin --profile dsh-tui add dsh-llm-subscription@0.1.4
     fi
     ${dshLlmSubPatch}
+    ${dshTuiDecstbmPatch}
     ${dshGsdEnsure "dsh-tui"}
   '';
 
@@ -121,6 +122,45 @@ let
     open(p, "w").write(s)
     PY
       echo "dsh-llm-subscription: bumped contextWindow to 1M ($PROF)"
+    fi
+  '';
+
+  # Shared: disable dsh-tui's DECSTBM hardware-scroll fast path inside zellij,
+  # where it corrupts the transcript. In alt-screen the renderer shifts the
+  # ScrollBox with `CSI top;bot r` + `CSI n S/T` and then repaints only the
+  # rows that scrolled in. zellij's `CSI T` (grid.rs rotate_scroll_region_up)
+  # moves rows only while the cursor sits inside the scroll region, and its
+  # `CSI r` does not home the cursor outside origin mode -- but the renderer
+  # parks the cursor on the last screen row, below every ScrollBox. The shift
+  # is dropped, the diff assumes it happened, and stale rows survive on every
+  # scroll-up frame (tearing, leftover lines).
+  #
+  # The gate that should have caught this is isDecstbmSafe(): it excludes tmux
+  # and JediTerm but not zellij, and zellij forwards KITTY_WINDOW_ID into the
+  # pane, so detection concludes it is talking to kitty directly. Only the
+  # DECSTBM path is withdrawn -- zellij implements DEC 2026 properly, so
+  # BSU/ESU stay on and frames remain atomic.
+  #
+  # Sent upstream as ccch1mneyyy/dsh-TUI "fix(ink): disable DECSTBM hardware
+  # scroll inside zellij"; drop this block once a release carries the fix.
+  # Idempotent, and loud-but-harmless if a future version changes the body.
+  dshTuiDecstbmPatch = ''
+    _f="$PROF/node_modules/@deepseek-harness-tui/dsh-tui/lib/types/ink/terminal.js"
+    if [ -f "$_f" ] && ! grep -q "process.env.ZELLIJ" "$_f"; then
+      "${pkgs.python3}"/bin/python3 - "$_f" <<'PY'
+    import sys
+
+    path = sys.argv[1]
+    source = open(path).read()
+    old = "return SYNC_OUTPUT_SUPPORTED && !isJetBrainsIdeTerminal();"
+    new = "return SYNC_OUTPUT_SUPPORTED && !isJetBrainsIdeTerminal() && !process.env.ZELLIJ;"
+    found = source.count(old)
+    if found != 1:
+        print("dsh-tui: isDecstbmSafe body not found (%d matches) -- zellij scroll patch skipped" % found, file=sys.stderr)
+        raise SystemExit(0)
+    open(path, "w").write(source.replace(old, new))
+    print("dsh-tui: DECSTBM hardware scroll disabled under zellij")
+    PY
     fi
   '';
 
@@ -233,6 +273,8 @@ let
     ${dshBootstrap}
     echo "Installing the dsh-tui plugin into the 'dsh-tui' profile..."
     node --expose-internals "$BIN" plugin --profile dsh-tui add @deepseek-harness-tui/dsh-tui@0.10.0-beta.5
+    PROF="$HOME/.dsh/profiles/dsh-tui"
+    ${dshTuiDecstbmPatch}
     echo ""
     echo "Done! Start it with:  dsh-tui   (alias: dsht)"
     echo "Resume a session:     dsh-tui --resume <session-id>"
