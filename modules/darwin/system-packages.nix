@@ -45,7 +45,8 @@
     telegram-desktop
     clang-tools
     claude-code
-    codex
+    # Pinned ahead of nixpkgs (codex ships every other day); see pkgs/codex.nix.
+    (callPackage ../../pkgs/codex.nix {})
     alacritty
     kitty
     sops
