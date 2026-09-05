@@ -89,6 +89,26 @@ let
       echo "dsh-tui: installing dsh-llm-subscription (Claude/Gemini/Qwen via your CLIs)..."
       node --expose-internals "$BIN" plugin --profile dsh-tui add dsh-llm-subscription@0.1.4
     fi
+    ${dshLlmSubPatch} "$PROF"
+  '';
+
+  # Shared: patch dsh-llm-subscription's advertised contextWindow from the
+  # hardcoded 200k to 1M so dsh lets sessions grow to Claude's real ceiling.
+  # The plugin has no config knob for this; the value lives in its lib, so we
+  # rewrite it after install. Idempotent (only touches files still at 200k).
+  dshLlmSubPatch = ''
+    _p="$1"
+    _f="$_p/node_modules/dsh-llm-subscription/lib/index.js"
+    if [ -f "$_f" ] && grep -q "contextWindow: 200000" "$_f"; then
+      "${pkgs.python3}"/bin/python3 - "$_f" <<'PY'
+    import sys
+    p = sys.argv[1]
+    s = open(p).read()
+    s = s.replace("contextWindow: 200000", "contextWindow: 1000000")
+    open(p, "w").write(s)
+    PY
+      echo "dsh-llm-subscription: bumped contextWindow to 1M ($_p)"
+    fi
   '';
 
   # Shared: install dsh-codex-subscription into the WEB profile when missing.
@@ -116,6 +136,7 @@ let
       echo "dsh: installing dsh-llm-subscription into the web profile..."
       node --expose-internals "$BIN" plugin --profile web add dsh-llm-subscription@0.1.4
     fi
+    ${dshLlmSubPatch} "$PROF"
   '';
 
   dshLauncher = pkgs.writeShellScriptBin "dsh" ''
