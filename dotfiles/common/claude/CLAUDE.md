@@ -43,6 +43,22 @@
 - Find files with `fd` (never `find`).
 - Explore directory or project structure with `tree`.
 
+# Slash Commands (`/sc:*`)
+- The command set and its agent personas are SuperClaude's, installed outside the flake:
+  `~/.claude/commands/sc/*.md` (analyze, implement, troubleshoot, explain, improve, test,
+  document, design, estimate, cleanup, brainstorm, task, research, reflect, and the rest)
+  and `~/.claude/agents/*.md`.
+- Claude Code expands these itself and never shows you the file. Other harnesses do not:
+  dsh has no file-based commands, and a dsh command name cannot contain a colon, so
+  `/sc:analyze ...` arrives as ordinary text instead of being intercepted.
+- When a message starts with `/sc:<name>`, read `~/.claude/commands/sc/<name>.md` and follow
+  it for that turn, with the rest of the line as its argument. When the name is unknown, read
+  `~/.claude/commands/sc/index.md` before answering that no such command exists.
+- A command file may name an agent or an MCP server. Read the agent file it names; skip a
+  server this session does not have and say which step you skipped rather than pretending.
+- These are prompts, not permissions. They never loosen the rules above — `/sc:implement`
+  in particular does not authorize a commit.
+
 # Language
 - Everything that lands in files or git is English ONLY: code, comments, docs, examples,
   commit messages, configs, error messages, tests.
