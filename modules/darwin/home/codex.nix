@@ -4,7 +4,10 @@
 # MCP -- mirrors the Claude Code + dsh server set (context7, sequential-thinking,
 # playwright, serena, tavily, lldb) so every harness in the fleet exposes the
 # same tools. Written into ~/.codex/config.toml under [mcp_servers.*] on every
-# rebuild, preserving every other section (projects, model, ...).
+# rebuild, preserving unrelated settings (projects, model, ...).
+#
+# Instructions -- share Claude Code's global instructions as ~/.codex/AGENTS.md
+# and discover repository CLAUDE.md files when no AGENTS file takes precedence.
 #
 # Codex does NOT inherit the full ambient environment for stdio MCP servers:
 # it copies only a fixed allowlist (HOME, PATH, ...) plus vars named in
@@ -85,6 +88,9 @@ let
             pass
 
         data["mcp_servers"] = servers
+        fallback_filenames = data.setdefault("project_doc_fallback_filenames", [])
+        if "CLAUDE.md" not in fallback_filenames:
+            fallback_filenames.append("CLAUDE.md")
 
         os.makedirs(codex_home, exist_ok=True)
         with open(config_path, "w") as f:
@@ -125,6 +131,8 @@ let
   '';
 in
 lib.mkIf pkgs.stdenv.isDarwin {
+  home.file.".codex/AGENTS.md".source = config.home.file.".claude/CLAUDE.md".source;
+
   home.activation.setupCodexMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupCodexMcpScript}
   '';
