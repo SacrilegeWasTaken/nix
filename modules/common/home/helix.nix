@@ -19,6 +19,7 @@
     extraPackages = with pkgs; [
       starpls
       buildifier
+      simple-completion-language-server
     ];
 
     themes.base16_custom = {
@@ -118,6 +119,14 @@
         command = "starpls";
       };
 
+      language-server.scls = {
+        command = "simple-completion-language-server";
+        config = {
+          feature_words = true;
+          feature_snippets = false;
+        };
+      };
+
       formatter.buildifier = {
         command = "buildifier";
       };
@@ -126,22 +135,24 @@
         {
           name = "rust";
           auto-format = true;
+          language-servers = [ "rust-analyzer" "scls" ];
         }
         {
           name = "c";
           auto-format = true;
-          language-servers = [ "clangd" ];
+          language-servers = [ "clangd" "scls" ];
           indent = { tab-width = 4; unit = "    "; };
         }
         {
           name = "cpp";
           auto-format = true;
-          language-servers = [ "clangd" ];
+          language-servers = [ "clangd" "scls" ];
           indent = { tab-width = 4; unit = "    "; };
         }
         {
           name = "zig";
           auto-format = true;
+          language-servers = [ "zls" "scls" ];
         }
         {
           name = "starlark";
@@ -157,7 +168,7 @@
             "WORKSPACE.bazel"
             "bzlmod"
           ];
-          language-servers = [ "starpls" ];
+          language-servers = [ "starpls" "scls" ];
           formatter = { command = "buildifier"; };
           auto-format = true;
         }
