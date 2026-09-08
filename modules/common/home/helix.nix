@@ -159,13 +159,13 @@
           file-types = [
             "bzl"
             "bxl"
-            "BUCK"
-            "BUILD"
-            "BUILD.bazel"
-            "PACKAGE"
-            "PACKAGE.bazel"
-            "WORKSPACE"
-            "WORKSPACE.bazel"
+            { glob = "BUCK"; }
+            { glob = "BUILD"; }
+            { glob = "BUILD.bazel"; }
+            { glob = "PACKAGE"; }
+            { glob = "PACKAGE.bazel"; }
+            { glob = "WORKSPACE"; }
+            { glob = "WORKSPACE.bazel"; }
             "bzlmod"
           ];
           language-servers = [ "starpls" "scls" ];
