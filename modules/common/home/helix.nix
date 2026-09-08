@@ -51,6 +51,10 @@
         color-modes = true;
         rulers = [ 100 ];
         completion-replace = true;
+        word-completion = {
+          enable = true;
+          trigger-length = 1;
+        };
         cursorline = true;
         popup-border = "all";
         trim-trailing-whitespace = true;
