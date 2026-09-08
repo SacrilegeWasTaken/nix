@@ -119,6 +119,11 @@
         command = "starpls";
       };
 
+      language-server.buck2 = {
+        command = "buck2";
+        args = [ "lsp" ];
+      };
+
       language-server.scls = {
         command = "simple-completion-language-server";
         config = {
@@ -155,9 +160,8 @@
           language-servers = [ "zls" "scls" ];
         }
         {
-          name = "starlark";
+          name = "buck2";
           file-types = [
-            "bzl"
             "bxl"
             { glob = "BUCK"; }
             { glob = "BUILD"; }
@@ -166,6 +170,15 @@
             { glob = "PACKAGE.bazel"; }
             { glob = "WORKSPACE"; }
             { glob = "WORKSPACE.bazel"; }
+          ];
+          language-servers = [ "buck2" "scls" ];
+          formatter = { command = "buildifier"; };
+          auto-format = true;
+        }
+        {
+          name = "starlark";
+          file-types = [
+            "bzl"
             "bzlmod"
           ];
           language-servers = [ "starpls" "scls" ];
