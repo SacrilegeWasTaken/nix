@@ -16,6 +16,11 @@
       });
     };
 
+    extraPackages = with pkgs; [
+      starpls
+      buildifier
+    ];
+
     themes.base16_custom = {
       inherits = "base16_default";
       "ui.statusline" = { fg = "#d8d8d8"; bg = "#282828"; };
@@ -108,6 +113,14 @@
         ];
       };
 
+      language-server.starpls = {
+        command = "starpls";
+      };
+
+      formatter.buildifier = {
+        command = "buildifier";
+      };
+
       language = [
         {
           name = "rust";
@@ -127,6 +140,24 @@
         }
         {
           name = "zig";
+          auto-format = true;
+        }
+        {
+          name = "starlark";
+          file-types = [
+            "bzl"
+            "bxl"
+            "BUCK"
+            "BUILD"
+            "BUILD.bazel"
+            "PACKAGE"
+            "PACKAGE.bazel"
+            "WORKSPACE"
+            "WORKSPACE.bazel"
+            "bzlmod"
+          ];
+          language-servers = [ "starpls" ];
+          formatter = { command = "buildifier"; };
           auto-format = true;
         }
       ];
