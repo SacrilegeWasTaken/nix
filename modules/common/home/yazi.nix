@@ -14,7 +14,7 @@
       };
       opener = {
         edit = [{
-          run = ''hx "$@"'';
+          run = "hx %s";
           block = true;
           desc = "Helix";
         }];
