@@ -160,31 +160,21 @@
           language-servers = [ "zls" "scls" ];
         }
         {
-          name = "buck2";
-          scope = "source.starlark";
-          grammar = "python";
-          language-id = "starlark";
-          file-types = [
-            "bxl"
-            { glob = "**/BUCK"; }
-            { glob = "**/BUILD"; }
-            { glob = "**/BUILD.bazel"; }
-            { glob = "**/PACKAGE"; }
-            { glob = "**/PACKAGE.bazel"; }
-            { glob = "**/WORKSPACE"; }
-            { glob = "**/WORKSPACE.bazel"; }
-          ];
-          language-servers = [ "buck2" "scls" ];
-          formatter = { command = "buildifier"; };
-          auto-format = true;
-        }
-        {
           name = "starlark";
           scope = "source.starlark";
           grammar = "python";
           language-id = "starlark";
           file-types = [
             "bzl"
+            "bazel"
+            "star"
+            "bxl"
+            { glob = "BUCK"; }
+            { glob = "BUILD"; }
+            { glob = "BUILD.*"; }
+            { glob = "WORKSPACE"; }
+            { glob = "WORKSPACE.bzlmod"; }
+            { glob = "PACKAGE"; }
             "bzlmod"
           ];
           language-servers = [ "buck2" "scls" ];
