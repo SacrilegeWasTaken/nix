@@ -166,13 +166,13 @@
           language-id = "starlark";
           file-types = [
             "bxl"
-            { glob = "BUCK"; }
-            { glob = "BUILD"; }
-            { glob = "BUILD.bazel"; }
-            { glob = "PACKAGE"; }
-            { glob = "PACKAGE.bazel"; }
-            { glob = "WORKSPACE"; }
-            { glob = "WORKSPACE.bazel"; }
+            { glob = "**/BUCK"; }
+            { glob = "**/BUILD"; }
+            { glob = "**/BUILD.bazel"; }
+            { glob = "**/PACKAGE"; }
+            { glob = "**/PACKAGE.bazel"; }
+            { glob = "**/WORKSPACE"; }
+            { glob = "**/WORKSPACE.bazel"; }
           ];
           language-servers = [ "buck2" "scls" ];
           formatter = { command = "buildifier"; };
