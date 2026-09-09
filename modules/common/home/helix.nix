@@ -162,6 +162,8 @@
         {
           name = "buck2";
           scope = "source.starlark";
+          grammar = "starlark";
+          language-id = "starlark";
           file-types = [
             "bxl"
             { glob = "BUCK"; }
@@ -179,6 +181,8 @@
         {
           name = "starlark";
           scope = "source.starlark";
+          grammar = "starlark";
+          language-id = "starlark";
           file-types = [
             "bzl"
             "bzlmod"
