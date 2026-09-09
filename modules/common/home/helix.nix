@@ -162,7 +162,7 @@
         {
           name = "buck2";
           scope = "source.starlark";
-          grammar = "starlark";
+          grammar = "python";
           language-id = "starlark";
           file-types = [
             "bxl"
@@ -181,7 +181,7 @@
         {
           name = "starlark";
           scope = "source.starlark";
-          grammar = "starlark";
+          grammar = "python";
           language-id = "starlark";
           file-types = [
             "bzl"
