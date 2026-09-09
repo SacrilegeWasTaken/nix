@@ -187,7 +187,7 @@
             "bzl"
             "bzlmod"
           ];
-          language-servers = [ "starpls" "scls" ];
+          language-servers = [ "buck2" "scls" ];
           formatter = { command = "buildifier"; };
           auto-format = true;
         }
