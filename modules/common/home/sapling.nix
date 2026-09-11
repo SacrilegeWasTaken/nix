@@ -24,5 +24,13 @@ in
       key = git.signing.key;
       enabled = true;
     };
+
+    extraConfig."merge-tools" = {
+      "vimdiff.executable" = "${config.home.profileDirectory}/bin/nvim";
+      "vimdiff.args" = "$local $other $base -c 'redraw | echomsg \"Sapling merge conflict: use :cq to abort\"'";
+      "vimdiff.check" = "changed";
+      "vimdiff.priority" = 100;
+      "vimdiff.premerge" = false;
+    };
   };
 }

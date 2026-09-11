@@ -4,6 +4,10 @@
 {
   programs.git = {
     enable = true;
+    settings.merge.tool = "vimdiff";
+    settings.mergetool.vimdiff = {
+      path = "${config.home.profileDirectory}/bin/nvim";
+    };
     settings.user.name = "Leonid";
     settings.user.email = "superdjskater@mail.ru";
 
