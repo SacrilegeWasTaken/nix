@@ -6,7 +6,12 @@
     enable = true;
     settings.merge.tool = "vimdiff";
     settings.mergetool.vimdiff = {
-      path = "${config.home.profileDirectory}/bin/nvim";
+      # The system profile, not the home-manager one: nixvim is a nix-darwin
+      # module, so nvim is in /run/current-system/sw/bin and has never been in
+      # ${config.home.profileDirectory}/bin -- which is where this pointed, at
+      # a path that does not exist. Same bug, and the same fix, as the Sapling
+      # merge tool in sapling.nix.
+      path = "/run/current-system/sw/bin/nvim";
     };
     settings.user.name = "Leonid";
     settings.user.email = "superdjskater@mail.ru";
