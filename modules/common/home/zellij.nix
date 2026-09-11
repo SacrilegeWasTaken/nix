@@ -22,6 +22,8 @@
     theme "gruvbox-dark"
     pane_frames false
     mouse_mode true
+    // Keep trackpad scrolling in the current mode instead of entering Scroll mode.
+    scroll_mode_sync false
     copy_on_select true
     attach_to_session true
     show_startup_tips false
