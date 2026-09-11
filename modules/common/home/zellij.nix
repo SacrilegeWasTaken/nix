@@ -256,6 +256,14 @@
         shared_except "tmux" "locked" {
             bind "Ctrl b" { SwitchToMode "Tmux"; }
         }
+        // macOS labels the physical backspace key as Delete. When the Kitty
+        // keyboard protocol is active, forward both deletion keys in their
+        // conventional terminal encodings so applications that do not opt in
+        // to that protocol still receive them.
+        shared_among "normal" "locked" {
+            bind "Backspace" { Write 127; }
+            bind "Delete" { Write 27 91 51 126; }
+        }
     }
   '';
 
