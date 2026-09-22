@@ -37,6 +37,8 @@ stdenv.mkDerivation {
     export GIT_CONFIG_VALUE_0=HTTP/1.1
     export GIT_TERMINAL_PROMPT=0
     export SSL_CERT_FILE="$GIT_SSL_CAINFO"
+    export SWIFTPM_DISABLE_SANDBOX=1
+    export SWIFT_BUILD_USE_SANDBOX=0
     export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
     export SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
     unset NIX_CFLAGS_COMPILE NIX_CFLAGS_LINK NIX_LDFLAGS
@@ -56,8 +58,13 @@ stdenv.mkDerivation {
       -project xcode/AeroSpace.xcodeproj \
       -scheme AeroSpace \
       -configuration Release \
+      -disableAutomaticPackageResolution \
+      -IDEPackageSupportDisableManifestSandbox=1 \
+      -IDEPackageSupportDisablePackageSandbox=1 \
+      -IDEPackageSupportDisablePluginExecutionSandbox=1 \
       -derivedDataPath xcode/.xcode-build \
       CODE_SIGNING_ALLOWED=NO \
+      'OTHER_SWIFT_FLAGS=$(inherited) -disable-sandbox' \
       build
 
     runHook postBuild
