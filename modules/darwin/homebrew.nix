@@ -24,13 +24,6 @@ PY
     taps = [
       "homebrew/homebrew-core"
       "homebrew/homebrew-cask"
-      # Homebrew 6 refuses formulae/casks from untrusted third-party taps.
-      # These taps are pinned as flake inputs, so trusting them is declarative.
-      {
-        name = "nikitabobko/tap";
-        clone_target = "https://github.com/nikitabobko/homebrew-tap.git";
-        trusted = true;
-      }
       # No clone_target here: with a custom remote, bundle records tap trust by
       # URL, which can never match this tap — nix-homebrew installs it from a
       # flake input as a remote-less store symlink, not a git clone. Without
@@ -59,7 +52,6 @@ PY
       # (auto_updates), so let brew skip its upgrades.
       { name = "raycast"; greedy = false; }
       "orbstack"
-      "aerospace"
       # Pin the versioned cask: the "olovebar" latest alias points at the
       # mutable download/latest/ release asset, which isn't updated per release.
       "olovebar@0.6.0"

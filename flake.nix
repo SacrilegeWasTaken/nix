@@ -30,7 +30,7 @@
 
     homebrew-core = { url = "github:homebrew/homebrew-core"; flake = false; };
     homebrew-cask = { url = "github:homebrew/homebrew-cask"; flake = false; };
-    nikitabobko-tap = { url = "github:nikitabobko/homebrew-tap"; flake = false; };
+    aerospace-src = { url = "github:nikitabobko/AeroSpace"; flake = false; };
     # SSH, not HTTPS: Codeberg's anti-bot blocks non-browser HTTPS clients
     # (nix/git/curl get 403/503) while SSH key auth works.
     sacrilegewastaken-tap = { url = "git+ssh://git@codeberg.org/sacrilegewastaken/tap.git"; flake = false; };
@@ -38,7 +38,7 @@
   };
 
   outputs = inputs @ { self, nix-darwin, nixpkgs, home-manager, nix-homebrew
-    , homebrew-core, homebrew-cask, nikitabobko-tap, sacrilegewastaken-tap, nixvim
+    , homebrew-core, homebrew-cask, sacrilegewastaken-tap, nixvim
     , sops-nix, ...
     }:
     let
@@ -54,6 +54,7 @@
       '';
       stateVersion = "25.11";
       dotfilesDir = self + "/dotfiles";
+      aerospaceVersion = "git-${inputs."aerospace-src".shortRev}";
     in {
       formatter.${currentSystem} = (pkgsFor currentSystem).nixpkgs-fmt;
 
@@ -61,7 +62,8 @@
       darwinConfigurations."laptop" = nix-darwin.lib.darwinSystem {
         system = currentSystem;
         specialArgs = {
-          inherit inputs stateVersion dotfilesDir username;
+          inherit inputs stateVersion dotfilesDir username aerospaceVersion;
+          aerospaceSrc = inputs."aerospace-src";
           self = inputs.self;
           nixvim = inputs.nixvim;
         };
@@ -95,7 +97,6 @@
               taps = {
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
-                "nikitabobko/homebrew-tap" = nikitabobko-tap;
                 "sacrilegewastaken/homebrew-tap" = sacrilegewastaken-tap;
               };
             };

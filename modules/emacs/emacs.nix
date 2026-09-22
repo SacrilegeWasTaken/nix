@@ -10,6 +10,14 @@
 let
   emacsPkg = if pkgs.stdenv.isDarwin then pkgs.emacs-macport else pkgs.emacs-pgtk;
   epkgs = pkgs.emacsPackagesFor emacsPkg;
+  cmakeMode = epkgs.cmake-mode.overrideAttrs (_: {
+    src = pkgs.fetchFromGitHub {
+      owner = "Kitware";
+      repo = "CMake";
+      rev = "af7ecc8c294d153b0120813776e1fa11c5bfe4a1";
+      hash = "sha256-oVJpBWhLPWkFhQYu4Ueh5Q0+mCapncS2MjoSK/12SDg=";
+    };
+  });
   treesitGrammars = epkgs.treesit-grammars.with-all-grammars;
 in
 {
@@ -51,7 +59,7 @@ in
 
       # C / C++
       clang-format
-      cmake-mode
+      cmakeMode
 
       # Misc languages / VCS / project
       magit
