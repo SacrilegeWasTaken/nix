@@ -41,6 +41,7 @@ stdenv.mkDerivation {
     export SWIFT_BUILD_USE_SANDBOX=0
     export DEVELOPER_DIR="/Applications/Xcode.app/Contents/Developer"
     export SDKROOT="$(/usr/bin/xcrun --sdk macosx --show-sdk-path)"
+    unset CFLAGS CXXFLAGS CPPFLAGS LDFLAGS
     unset NIX_CFLAGS_COMPILE NIX_CFLAGS_LINK NIX_LDFLAGS
 
     cat > Sources/Common/versionGenerated.swift <<'EOF'
@@ -54,27 +55,27 @@ stdenv.mkDerivation {
     EOF
 
     /usr/bin/swift build --disable-sandbox -c release --product aerospace
-    /usr/bin/xcodebuild \
-      -project xcode/AeroSpace.xcodeproj \
-      -scheme AeroSpace \
-      -configuration Release \
-      -disableAutomaticPackageResolution \
-      -IDEPackageSupportDisableManifestSandbox=1 \
-      -IDEPackageSupportDisablePackageSandbox=1 \
-      -IDEPackageSupportDisablePluginExecutionSandbox=1 \
-      -derivedDataPath xcode/.xcode-build \
-      CODE_SIGNING_ALLOWED=NO \
-      'OTHER_SWIFT_FLAGS=$(inherited) -disable-sandbox' \
-      build
-
     runHook postBuild
   '';
 
   installPhase = ''
     runHook preInstall
 
-    mkdir -p "$out/Applications" "$out/bin"
-    cp -R xcode/.xcode-build/Build/Products/Release/AeroSpace.app "$out/Applications/"
+    mkdir -p "$out/Applications/AeroSpace.app/Contents/MacOS" "$out/bin"
+    cp .build/release/aerospace "$out/Applications/AeroSpace.app/Contents/MacOS/AeroSpace"
+    cat > "$out/Applications/AeroSpace.app/Contents/Info.plist" <<EOF
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0"><dict>
+      <key>CFBundleExecutable</key><string>AeroSpace</string>
+      <key>CFBundleIdentifier</key><string>bobko.aerospace</string>
+      <key>CFBundleName</key><string>AeroSpace</string>
+      <key>CFBundlePackageType</key><string>APPL</string>
+      <key>CFBundleShortVersionString</key><string>${version}</string>
+      <key>CFBundleVersion</key><string>${version}</string>
+      <key>LSUIElement</key><true/>
+    </dict></plist>
+    EOF
     cp .build/release/aerospace "$out/bin/aerospace"
 
     runHook postInstall
