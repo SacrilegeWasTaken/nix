@@ -1,5 +1,5 @@
 # Darwin system packages. Rust/Haskell are in modules/common/dev.
-{ config, pkgs, aerospaceSrc, aerospaceVersion, ... }:
+{ config, pkgs, ... }:
 
 {
   environment.systemPackages = with pkgs; [
@@ -58,9 +58,5 @@
     # zellij comes from home-manager (patched package, see common/home/zellij.nix)
     lazygit
     gh
-    (callPackage ../../pkgs/aerospace.nix {
-      src = aerospaceSrc;
-      version = aerospaceVersion;
-    })
   ];
 }

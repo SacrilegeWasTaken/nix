@@ -1,21 +1,5 @@
 {
   "nodes": {
-    "aerospace-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1789985506,
-        "narHash": "sha256-FYtd7qyRCZBqB2B2UrtRz965rp/B80bs9qZQujt0j3U=",
-        "owner": "nikitabobko",
-        "repo": "AeroSpace",
-        "rev": "5f08f9c0c9daea6bb0f652da71d80a02e0b3f6cf",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nikitabobko",
-        "repo": "AeroSpace",
-        "type": "github"
-      }
-    },
     "brew-src": {
       "flake": false,
       "locked": {
@@ -103,6 +87,22 @@
       "original": {
         "owner": "homebrew",
         "repo": "homebrew-core",
+        "type": "github"
+      }
+    },
+    "nikitabobko-tap": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791286232,
+        "narHash": "sha256-Zsi4MqzCSUlx7Nfx7hkqafC4iyPAHZRDzL0xobOBNo8=",
+        "owner": "nikitabobko",
+        "repo": "homebrew-tap",
+        "rev": "086fa55e376037f28bd959a274f588c65296c1f1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nikitabobko",
+        "repo": "homebrew-tap",
         "type": "github"
       }
     },
@@ -215,10 +215,10 @@
     },
     "root": {
       "inputs": {
-        "aerospace-src": "aerospace-src",
         "home-manager": "home-manager",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "nikitabobko-tap": "nikitabobko-tap",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",

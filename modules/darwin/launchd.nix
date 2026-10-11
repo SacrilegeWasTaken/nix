@@ -1,11 +1,7 @@
-{ config, pkgs, username, aerospaceSrc, aerospaceVersion, ... }:
+{ config, pkgs, username, ... }:
 
 let
   bazelRemoteDir = "/Users/${username}/.cache/bazel-remote";
-  aerospace = pkgs.callPackage ../../pkgs/aerospace.nix {
-    src = aerospaceSrc;
-    version = aerospaceVersion;
-  };
 in
 {
   launchd.user.agents = {
@@ -17,7 +13,7 @@ in
       serviceConfig.StandardErrorPath = "/tmp/com.${username}.raycast.err.log";
     };
     "com.${username}.aerospace" = {
-      command = "${aerospace}/Applications/AeroSpace.app/Contents/MacOS/AeroSpace";
+      command = "/usr/bin/open -a Aerospace";
       serviceConfig.RunAtLoad = true;
       serviceConfig.KeepAlive = false;
       serviceConfig.StandardOutPath = "/tmp/com.${username}.aerospace.out.log";
