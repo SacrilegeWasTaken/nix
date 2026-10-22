@@ -41,3 +41,11 @@ The observed instability is most likely a combination of macOS 27 Spaces/WindowS
 ## Recommendation
 
 Do not remove AeroSpace or rewrite the keymap yet. First isolate whether the failure is focus switching, workspace assignment, display transitions, or a crash. The highest-value configuration experiment is to disable the mouse-follow callback and use one startup mechanism. If the failure persists on a single monitor with a clean config, it should be treated as an upstream macOS 27/AeroSpace compatibility bug rather than configuration drift.
+
+## Confirmed local symptom
+
+On the affected machine, `aerospace list-windows --all` lists Safari and System Settings but does not list the running Kitty or Telegram windows. macOS System Events names their foreground processes `.kitty-wrapped` and `.Telegram-wrapped`. The Nix-generated app executables contain `makeCWrapper` metadata and point at `.kitty-wrapped` / `.Telegram-wrapped` launchers.
+
+This matches AeroSpace discussion #2282: macOS 27 can report an invalid PID for applications launched through script or native wrapper executables, causing AeroSpace to omit them from `list-apps` and `list-windows --all`. The discussion's workaround is to launch the real application launcher directly, but that has trade-offs around LaunchServices and privacy attribution: <https://github.com/nikitabobko/AeroSpace/discussions/2282>.
+
+This makes the Nix app wrappers, rather than the AeroSpace keymap, the primary suspect for Kitty and Telegram.
