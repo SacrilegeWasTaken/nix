@@ -29,10 +29,11 @@
     homebrew-core = { url = "github:homebrew/homebrew-core"; flake = false; };
     homebrew-cask = { url = "github:homebrew/homebrew-cask"; flake = false; };
     nikitabobko-tap = { url = "github:nikitabobko/homebrew-tap"; flake = false; };
+    sacrilegewastaken-tap = { url = "git+ssh://git@codeberg.org/sacrilegewastaken/tap.git"; flake = false; };
   };
 
   outputs = inputs @ { self, nix-darwin, nixpkgs, home-manager, nix-homebrew
-    , homebrew-core, homebrew-cask, nikitabobko-tap, nixvim
+    , homebrew-core, homebrew-cask, nikitabobko-tap, sacrilegewastaken-tap, nixvim
     , sops-nix, ...
     }:
     let
@@ -86,6 +87,7 @@
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
                 "nikitabobko/homebrew-tap" = nikitabobko-tap;
+                "sacrilegewastaken/homebrew-tap" = sacrilegewastaken-tap;
               };
             };
           }

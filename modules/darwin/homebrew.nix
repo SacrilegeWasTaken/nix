@@ -13,6 +13,10 @@
         clone_target = "https://github.com/nikitabobko/homebrew-tap.git";
         trusted = true;
       }
+      {
+        name = "sacrilegewastaken/homebrew-tap";
+        trusted = true;
+      }
     ];
     brews = [
       "bazel-remote"
@@ -33,6 +37,7 @@
       { name = "raycast"; greedy = false; }
       "orbstack"
       "aerospace"
+      "olovebar@0.6.0"
     ];
     masApps = {
       # "Amphetamine" = 937984704;
