@@ -29,19 +29,19 @@ let
   # names ambient vars codex should copy into the server's launch environment.
   mcpServers = {
     context7 = {
-      command = "npx";
+      command = "${pkgs.nodejs}/bin/npx";
       args = [ "-y" "@upstash/context7-mcp@latest" ];
     };
     "sequential-thinking" = {
-      command = "npx";
+      command = "${pkgs.nodejs}/bin/npx";
       args = [ "-y" "@modelcontextprotocol/server-sequential-thinking" ];
     };
     playwright = {
-      command = "npx";
+      command = "${pkgs.nodejs}/bin/npx";
       args = [ "-y" "@playwright/mcp@latest" ];
     };
     serena = {
-      command = "uvx";
+      command = "${pkgs.uv}/bin/uvx";
       args = [
         "--from"
         "git+https://github.com/oraios/serena"
@@ -50,7 +50,7 @@ let
       ];
     };
     tavily = {
-      command = "npx";
+      command = "${pkgs.nodejs}/bin/npx";
       args = [ "-y" "tavily-mcp@latest" ];
       env_vars = [ "TAVILY_API_KEY" ];
     };
