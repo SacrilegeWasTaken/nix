@@ -4,6 +4,18 @@
   programs.helix = {
     enable = true;
 
+    # patches/helix-layout-remap.patch: adds a top-level `layout-remap`
+    # config table translating national-layout characters to the keys
+    # keybindings are defined with, at keymap-lookup time only. Both
+    # layouts work, hints stay English, insert mode is unaffected.
+    # (Upstream rejected this in helix-editor/helix#5046 in favor of a
+    # future scriptable config, hence a local patch.)
+    package = pkgs.helix.override {
+      helix-unwrapped = pkgs.helix-unwrapped.overrideAttrs (old: {
+        patches = (old.patches or [ ]) ++ [ ../../../patches/helix-layout-remap.patch ];
+      });
+    };
+
     extraPackages = with pkgs; [
       starpls
       buildifier
@@ -22,6 +34,17 @@
 
     settings = {
       theme = "modus_vivendi";
+
+      "layout-remap" = [
+        {
+          from = "йцукенгшщзхъфывапролджэячсмитьбюё";
+          into = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`";
+        }
+        {
+          from = "ЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮЁ";
+          into = "QWERTYUIOP{}ASDFGHJKL:\"ZXCVBNM<>~";
+        }
+      ];
 
       editor = {
         line-number = "relative";
