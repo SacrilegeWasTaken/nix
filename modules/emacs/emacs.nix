@@ -8,7 +8,7 @@
 { config, pkgs, lib, ... }:
 
 let
-  emacsPkg = if pkgs.stdenv.isDarwin then pkgs.emacs-macport else pkgs.emacs-pgtk;
+  emacsPkg = if pkgs.stdenv.hostPlatform.isDarwin then pkgs.emacs-macport else pkgs.emacs-pgtk;
   epkgs = pkgs.emacsPackagesFor emacsPkg;
   cmakeMode = epkgs.cmake-mode.overrideAttrs (_: {
     src = pkgs.fetchFromGitHub {
@@ -71,7 +71,7 @@ in
   };
 
   # External tools the LSP servers / debugger need on PATH.
-  # rust-analyzer/rustfmt come from rustup (modules/common/dev/rust.nix);
+  # rust-analyzer and rustfmt come from modules/common/dev/rust.nix.
   # clangd/clang-format come from clang-tools (darwin system packages).
   home.packages = with pkgs; [
     lldb # lldb-dap for dap-mode

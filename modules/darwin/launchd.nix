@@ -19,13 +19,6 @@ in
       serviceConfig.StandardOutPath = "/tmp/com.${username}.aerospace.out.log";
       serviceConfig.StandardErrorPath = "/tmp/com.${username}.aerospace.err.log";
     };
-    "com.${username}.olovebar" = {
-      command = "/usr/bin/open -a OLoveBar";
-      serviceConfig.RunAtLoad = true;
-      serviceConfig.KeepAlive = false;
-      serviceConfig.StandardOutPath = "/tmp/com.${username}.olovebar.out.log";
-      serviceConfig.StandardErrorPath = "/tmp/com.${username}.olovebar.err.log";
-    };
     # Local REAPI cache for buck2/bazel builds (Homebrew formula, see homebrew.nix).
     # bazel-remote refuses to start without an existing --dir, and it has no flag
     # to turn the HTTP listener off, so both are handled here: the cache dir is

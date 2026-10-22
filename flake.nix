@@ -19,9 +19,7 @@
       url = "github:zhaofengli/nix-homebrew";
     };
 
-    nixvim = {
-      url = "github:nix-community/nixvim";
-    };
+    nixvim.url = "github:nix-community/nixvim";
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -31,14 +29,10 @@
     homebrew-core = { url = "github:homebrew/homebrew-core"; flake = false; };
     homebrew-cask = { url = "github:homebrew/homebrew-cask"; flake = false; };
     nikitabobko-tap = { url = "github:nikitabobko/homebrew-tap"; flake = false; };
-    # SSH, not HTTPS: Codeberg's anti-bot blocks non-browser HTTPS clients
-    # (nix/git/curl get 403/503) while SSH key auth works.
-    sacrilegewastaken-tap = { url = "git+ssh://git@codeberg.org/sacrilegewastaken/tap.git"; flake = false; };
-    olovebar = { url = "git+ssh://git@codeberg.org/sacrilegewastaken/olovebar.git"; flake = false; };
   };
 
   outputs = inputs @ { self, nix-darwin, nixpkgs, home-manager, nix-homebrew
-    , homebrew-core, homebrew-cask, nikitabobko-tap, sacrilegewastaken-tap, nixvim
+    , homebrew-core, homebrew-cask, nikitabobko-tap, nixvim
     , sops-nix, ...
     }:
     let
@@ -68,7 +62,6 @@
         modules = [
           ./profiles/laptop.nix
           ./modules/darwin/00-base.nix
-          ./modules/darwin/options.nix
           ./modules/darwin/system-packages.nix
           ./modules/darwin/homebrew.nix
           ./modules/darwin/fonts.nix
@@ -77,9 +70,6 @@
           ./modules/nix/nix-settings.nix
           ./modules/common/dev/rust.nix
           ./modules/common/dev/haskell.nix
-          # ./modules/darwin/dev/julia.nix
-          ./modules/apps/vscode.nix
-          ./modules/apps/olovebar.nix
           nixvim.nixDarwinModules.nixvim
           ./modules/neovim/nixvim.nix
           sops-nix.darwinModules.sops
@@ -96,7 +86,6 @@
                 "homebrew/homebrew-core" = homebrew-core;
                 "homebrew/homebrew-cask" = homebrew-cask;
                 "nikitabobko/homebrew-tap" = nikitabobko-tap;
-                "sacrilegewastaken/homebrew-tap" = sacrilegewastaken-tap;
               };
             };
           }
@@ -152,6 +141,12 @@
           {
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "backup";
+            home-manager.extraSpecialArgs = { inherit stateVersion dotfilesDir username; };
+            home-manager.users.${username}.imports = [
+              ./home/default.nix
+              ./modules/common/home/dotfiles.nix
+            ];
           }
         ];
       };

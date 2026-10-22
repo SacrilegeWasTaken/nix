@@ -235,7 +235,7 @@ let
   '';
 
 in
-lib.mkIf pkgs.stdenv.isDarwin {
+lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
   home.activation.setupClaudeMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     ${setupMcpScript}
   '';

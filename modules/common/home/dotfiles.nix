@@ -11,23 +11,19 @@ lib.mkIf (dotfilesDir != null) {
       "neofetch/config.conf".source = dotfilesDir + "/common/config.conf";
     }
     # ---------- Darwin only ----------
-    (lib.mkIf pkgs.stdenv.isDarwin {
-      "olovebar/olovebar.toml" = {
-        source = dotfilesDir + "/darwin/olovebar.toml";
-        force = true;
-      };
+    (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
       "aerospace/aerospace.toml".source = dotfilesDir + "/darwin/aerospace.toml";
       "tmux/tmux.conf".source = dotfilesDir + "/darwin/tmux.conf";
     })
     # ---------- NixOS (Linux) only ----------
-    (lib.mkIf (! pkgs.stdenv.isDarwin) {
+    (lib.mkIf (! pkgs.stdenv.hostPlatform.isDarwin) {
       "tmux/tmux.conf".source = dotfilesDir + "/nixos/tmux.conf";
     })
   ];
 
   # tmux: Darwin and NixOS have different files
   home.file.".tmux.conf".source = dotfilesDir + (
-    if pkgs.stdenv.isDarwin then "/darwin/tmux.conf" else "/nixos/tmux.conf"
+    if pkgs.stdenv.hostPlatform.isDarwin then "/darwin/tmux.conf" else "/nixos/tmux.conf"
   );
 
   # Claude Code: глобальный контекст (см. dotfiles/common/claude/CLAUDE.md)

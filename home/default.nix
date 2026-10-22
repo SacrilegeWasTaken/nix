@@ -3,7 +3,7 @@
 
 {
   home.username = username;
-  home.homeDirectory = lib.mkForce (if pkgs.stdenv.isDarwin then "/Users/${username}" else "/home/${username}");
+  home.homeDirectory = lib.mkForce (if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${username}" else "/home/${username}");
   home.stateVersion = stateVersion;
   programs.home-manager.enable = true;
 
@@ -17,7 +17,6 @@
     ../modules/common/home/zellij.nix
     ../modules/emacs/emacs.nix
     ../modules/darwin/home/default.nix
-    ../modules/nixos/home/default.nix
   ];
   # dotfiles.nix is imported from the flake (./modules/common/home/dotfiles.nix)
 }

@@ -3,9 +3,9 @@
 { config, pkgs, lib, ... }:
 
 {
-  imports = [ ./claude-code.nix ./codex.nix ./dsh.nix ];
+  imports = [ ./claude-code.nix ./codex.nix ];
 
-  config = lib.mkIf pkgs.stdenv.isDarwin {
+  config = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
     # ApplePressAndHoldEnabled (set in darwin/00-base.nix via system.defaults)
     # keeps getting reset by macOS, so it is reapplied on every rebuild and
     # at every login.

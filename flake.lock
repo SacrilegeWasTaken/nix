@@ -197,22 +197,6 @@
         "type": "github"
       }
     },
-    "olovebar": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1785510865,
-        "narHash": "sha256-jl2nkpUpuI2oovnlmUHsQcSL3DjP4LGx/pzNDVQqaYw=",
-        "ref": "refs/heads/main",
-        "rev": "3fbf65cb95c4292efac7a1fd2ef69c2f607f84d0",
-        "revCount": 253,
-        "type": "git",
-        "url": "ssh://git@codeberg.org/sacrilegewastaken/olovebar.git"
-      },
-      "original": {
-        "type": "git",
-        "url": "ssh://git@codeberg.org/sacrilegewastaken/olovebar.git"
-      }
-    },
     "root": {
       "inputs": {
         "home-manager": "home-manager",
@@ -223,25 +207,7 @@
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
         "nixvim": "nixvim",
-        "olovebar": "olovebar",
-        "sacrilegewastaken-tap": "sacrilegewastaken-tap",
         "sops-nix": "sops-nix"
-      }
-    },
-    "sacrilegewastaken-tap": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1785510767,
-        "narHash": "sha256-MWg/lh4dk4ADLhL9kItKoQPQlLrHEPBNWK1wxs4UHA8=",
-        "ref": "refs/heads/main",
-        "rev": "87c71e736507d2caee71646ea12bc30e3d8db90f",
-        "revCount": 30,
-        "type": "git",
-        "url": "ssh://git@codeberg.org/sacrilegewastaken/tap.git"
-      },
-      "original": {
-        "type": "git",
-        "url": "ssh://git@codeberg.org/sacrilegewastaken/tap.git"
       }
     },
     "sops-nix": {

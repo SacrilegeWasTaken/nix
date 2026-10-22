@@ -18,15 +18,14 @@ Everything is driven by a single `flake.nix`.
   - `laptop.nix` – common profile for real machines (GC, base settings)
   - `vm.nix` – lightweight NixOS VM profile (GNOME, small package set)
 - `modules/common/`
-  - `dev/rust.nix` – rustup + rust dev tooling from nixpkgs (Darwin + NixOS)
+  - `dev/rust.nix` – declarative Rust tooling from nixpkgs (Darwin + NixOS)
   - `dev/haskell.nix` – GHC + cabal + stack + HLS from nixpkgs
   - `home/*` – common home-manager bits (fish, git, dotfiles)
 - `modules/darwin/` – nix-darwin system modules:
   - `00-base.nix` – base system, primary user, GC interval
   - `system-packages.nix` – system-wide packages
   - `homebrew.nix` – Homebrew taps, casks, MAS apps
-  - `launchd.nix` – user launchd agents (Raycast, Aerospace, OLoveBar)
-  - `dev/julia.nix` – Julia via `juliaup` (Darwin only)
+  - `launchd.nix` – user launchd agents (Raycast, Aerospace, Bazel Remote)
 - `modules/nixos/` – NixOS system modules:
   - `base.nix` – locale, networking, XDG, base packages
   - `users/` – NixOS users, per-host pieces
@@ -38,7 +37,7 @@ Everything is driven by a single `flake.nix`.
   - `default.nix` – single home-manager entrypoint for both Darwin + NixOS
 - `dotfiles/`
   - `common/` – stuff for `~/.config` used on both platforms (kitty, zed, starship, neofetch)
-  - `darwin/` – macOS-specific configs (OLoveBar, Aerospace, tmux)
+  - `darwin/` – macOS-specific configs (AeroSpace, tmux)
   - `nixos/` – Linux-specific configs (tmux)
 - `secrets/`
   - SOPS + age secrets, managed via `sops-nix`
@@ -57,7 +56,7 @@ sudo darwin-rebuild switch --flake .#laptop --impure
 - Primary user is set once in `flake.nix` (`username` in `outputs`) and passed to all modules.
 - Home-manager is embedded via `home-manager.darwinModules.home-manager`.
 - Homebrew is managed declaratively (taps, brews, casks, MAS apps).
-- Rust, Haskell, Julia dev tooling is shared via `modules/common/dev/*` and `modules/darwin/dev/julia.nix`.
+- Rust and Haskell development tooling is shared via `modules/common/dev/*`.
 
 ### NixOS laptop
 
@@ -88,7 +87,7 @@ Home-manager is wired once in `flake.nix` and dispatched via `home/default.nix`:
 
 - Common modules: `modules/common/home/*`
 - Darwin-specific: `modules/darwin/home/default.nix`
-- NixOS-specific: `modules/nixos/home/default.nix`
+- NixOS-specific behavior is expressed by the platform guards in the shared modules.
 
 Dotfiles:
 - `dotfiles/common/*` are linked into `~/.config` via `modules/common/home/dotfiles.nix`
@@ -98,12 +97,12 @@ Dotfiles:
 
 Secrets live under `secrets/` and are decrypted at activation time via `sops-nix`:
 
-- Age key: generated once (`make sops-key`) into `~/.config/sops/age/keys.txt`
+- Age key: generated once (`make sops-init`) into `~/.config/sops/age/keys.txt`
 - `.sops.yaml` (in repo root) defines which secrets are encrypted for which key
 - Usage example:
 
 ```bash
-nix shell nixpkgs#sops -c sops secrets/example.yaml
+make sops-edit
 ```
 
 You can then consume secrets from Nix via `sops.secrets.<name>` options.
@@ -112,4 +111,3 @@ You can then consume secrets from Nix via `sops.secrets.<name>` options.
 
 There is an example C project under `example/cproject/flake.nix` that shows how to
 build and develop C code with this flake as a base.
-

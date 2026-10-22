@@ -55,9 +55,7 @@
   `~/.claude/commands/sc/*.md` (analyze, implement, troubleshoot, explain, improve, test,
   document, design, estimate, cleanup, brainstorm, task, research, reflect, and the rest)
   and `~/.claude/agents/*.md`.
-- Claude Code expands these itself and never shows you the file. Other harnesses do not:
-  dsh has no file-based commands, and a dsh command name cannot contain a colon, so
-  `/sc:analyze ...` arrives as ordinary text instead of being intercepted.
+- Claude Code expands these itself and never shows you the file.
 - When a message starts with `/sc:<name>`, read `~/.claude/commands/sc/<name>.md` and follow
   it for that turn, with the rest of the line as its argument. When the name is unknown, read
   `~/.claude/commands/sc/index.md` before answering that no such command exists.

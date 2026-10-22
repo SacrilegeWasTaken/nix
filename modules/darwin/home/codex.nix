@@ -1,9 +1,8 @@
 # Declarative OpenAI Codex setup: the shared MCP server set plus the SuperClaude
 # command set ported to Codex "skills" (the SuperCodex-style framework).
 #
-# MCP -- mirrors the Claude Code + dsh server set (context7, sequential-thinking,
-# playwright, serena, tavily, lldb) so every harness in the fleet exposes the
-# same tools. Written into ~/.codex/config.toml under [mcp_servers.*] on every
+# MCP -- mirrors the Claude Code server set (context7, sequential-thinking,
+# playwright, serena, tavily, lldb). Written into ~/.codex/config.toml under [mcp_servers.*] on every
 # rebuild, preserving unrelated settings (projects, model, ...).
 #
 # Instructions -- share Claude Code's global instructions as ~/.codex/AGENTS.md
@@ -130,7 +129,7 @@ let
     done
   '';
 in
-lib.mkIf pkgs.stdenv.isDarwin {
+lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
   home.file.".codex/AGENTS.md".source = config.home.file.".claude/CLAUDE.md".source;
 
   home.activation.setupCodexMcp = lib.hm.dag.entryAfter [ "writeBoundary" ] ''

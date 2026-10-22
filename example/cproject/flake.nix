@@ -10,7 +10,7 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; config.allowUnfree = true; };
-        isDarwin = pkgs.stdenv.isDarwin;
+        isDarwin = pkgs.stdenv.hostPlatform.isDarwin;
         isLinux = pkgs.stdenv.isLinux;
 
         # Common deps for a large C++ project

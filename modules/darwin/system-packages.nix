@@ -55,7 +55,7 @@
     tmux
     jdk21
     yazi
-    # zellij comes from home-manager (patched package, see common/home/zellij.nix)
+    # zellij comes from home-manager.
     lazygit
     gh
   ];

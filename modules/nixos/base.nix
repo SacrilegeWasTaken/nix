@@ -36,11 +36,6 @@
     code-cursor
     vscode
     kitty
-    hyprland
-    hyprpaper
-    waybar
-    foot
-    swaybg
     zed-editor
   ];
 
