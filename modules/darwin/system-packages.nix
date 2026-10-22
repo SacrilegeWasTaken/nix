@@ -13,16 +13,26 @@ let
   });
 
   telegramDesktopForAeroSpace = pkgs.telegram-desktop.overrideAttrs (old: {
+    nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ pkgs.python3 ];
     postFixup = (old.postFixup or "") + ''
-      cat > "$out/Applications/Telegram.app/Contents/Resources/qt.conf" <<EOF
-      [Paths]
-      Plugins = ${lib.makeSearchPath "lib/qt-6/plugins" [
+      ${pkgs.python3}/bin/python3 - "$out/Applications/Telegram.app/Contents/Info.plist" <<'PYEOF'
+      import plistlib
+      import sys
+
+      plist_path = sys.argv[1]
+      with open(plist_path, "rb") as plist_file:
+          plist = plistlib.load(plist_file)
+
+      plist.setdefault("LSEnvironment", {})["QT_PLUGIN_PATH"] = "${lib.makeSearchPath "lib/qt-6/plugins" [
         pkgs.qt6.qtbase
         pkgs.qt6.qtimageformats
         pkgs.qt6.qtsvg
         pkgs.qt6.qtdeclarative
-      ]}
-      EOF
+      ]}"
+
+      with open(plist_path, "wb") as plist_file:
+          plistlib.dump(plist, plist_file, fmt=plistlib.FMT_BINARY)
+      PYEOF
       mv "$out/Applications/Telegram.app/Contents/MacOS/.Telegram-wrapped" \
         "$out/Applications/Telegram.app/Contents/MacOS/Telegram"
     '';
