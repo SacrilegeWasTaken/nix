@@ -19,7 +19,9 @@
       set -gx CARGO_HOME "$HOME/.cargo"
     '';
     interactiveShellInit = ''
-      starship init fish | source
+      if command -v starship >/dev/null 2>&1
+        starship init fish | source
+      end
       # Guarded: mise comes from Homebrew, so it is absent until the bundle runs.
       if command -v mise >/dev/null 2>&1
         mise activate fish | source
