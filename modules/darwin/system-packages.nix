@@ -1,5 +1,33 @@
 # Darwin system packages. Rust/Haskell are in modules/common/dev.
-{ config, pkgs, ... }:
+{ config, lib, pkgs, ... }:
+
+let
+  # macOS 27 does not expose applications launched through Nix's binary
+  # wrappers to Accessibility clients reliably. Keep the real executable as
+  # the app-bundle entry point so AeroSpace can discover and manage its window.
+  kittyForAeroSpace = pkgs.kitty.overrideAttrs (old: {
+    postFixup = (old.postFixup or "") + ''
+      mv "$out/Applications/kitty.app/Contents/MacOS/.kitty-wrapped" \
+        "$out/Applications/kitty.app/Contents/MacOS/kitty"
+    '';
+  });
+
+  telegramDesktopForAeroSpace = pkgs.telegram-desktop.overrideAttrs (old: {
+    postFixup = (old.postFixup or "") + ''
+      cat > "$out/Applications/Telegram.app/Contents/Resources/qt.conf" <<EOF
+      [Paths]
+      Plugins = ${lib.makeSearchPath "lib/qt-6/plugins" [
+        pkgs.qt6.qtbase
+        pkgs.qt6.qtimageformats
+        pkgs.qt6.qtsvg
+        pkgs.qt6.qtdeclarative
+      ]}
+      EOF
+      mv "$out/Applications/Telegram.app/Contents/MacOS/.Telegram-wrapped" \
+        "$out/Applications/Telegram.app/Contents/MacOS/Telegram"
+    '';
+  });
+in
 
 {
   environment.systemPackages = with pkgs; [
@@ -42,13 +70,12 @@
     nixd
     docker
     docker-compose
-    telegram-desktop
+    telegramDesktopForAeroSpace
     clang-tools
     claude-code
     # Pinned ahead of nixpkgs (codex ships every other day); see pkgs/codex.nix.
     (callPackage ../../pkgs/codex.nix {})
-    alacritty
-    kitty
+    kittyForAeroSpace
     sops
     age
     ffmpeg

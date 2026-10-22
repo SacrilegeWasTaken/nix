@@ -15,8 +15,7 @@
     attach_to_session true
     show_startup_tips false
 
-    // Ctrl+<Russian> mode-switches are intercepted by Alacritty (ru-bindings.toml),
-    // which sends the English KKP sequence — mode-switching works in both layouts.
+    // Ctrl+<Russian> mode-switches use kitty's keyboard handling.
     //
     // Sub-mode single-letter shortcuts are English-only here: adding Cyrillic bindings
     // causes the status bar to display corrupted characters (Zellij 0.44.3 bug where
