@@ -1,8 +1,16 @@
 # Darwin fish: shell init, default shell. Common fish config can live in home-manager (modules/common/home/fish.nix).
 { config, pkgs, ... }:
 
+let
+  fishWithEnvironment = pkgs.fish.override {
+    fishEnvPreInit = "source /etc/fish/setEnvironment.fish";
+  };
+in
 {
   programs.fish = {
+    # Import the same set-environment as zsh and bash before Fish initializes.
+    package = fishWithEnvironment;
+    useBabelfish = true;
     shellInit = ''
       set -g fish_greeting ""
       fish_add_path "$HOME/.local/bin"
@@ -43,8 +51,8 @@
     '';
   };
 
-  environment.shells = [ pkgs.fish ];
+  environment.shells = [ fishWithEnvironment ];
   users.users.${config.system.primaryUser} = {
-    shell = pkgs.fish;
+    shell = fishWithEnvironment;
   };
 }
