@@ -89,6 +89,10 @@ in
     sops
     age
     ffmpeg
+    ffmpeg.dev
+    imath
+    openexr
+    openexr.dev
     tmux
     jdk21
     yazi
