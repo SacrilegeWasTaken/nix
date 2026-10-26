@@ -40,6 +40,12 @@ let
 in
 
 {
+  environment.variables.PKG_CONFIG_PATH = lib.makeSearchPath "lib/pkgconfig" [
+    pkgs.ffmpeg.dev
+    pkgs.imath
+    pkgs.openexr.dev
+  ];
+
   environment.systemPackages = with pkgs; [
     git
     git-lfs
