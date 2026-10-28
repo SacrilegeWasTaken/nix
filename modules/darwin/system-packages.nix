@@ -89,8 +89,6 @@ in
     telegramDesktopForAeroSpace
     clang-tools
     claude-code
-    # Pinned ahead of nixpkgs (codex ships every other day); see pkgs/codex.nix.
-    (callPackage ../../pkgs/codex.nix {})
     kittyForAeroSpace
     sops
     age

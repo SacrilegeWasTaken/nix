@@ -1,5 +1,6 @@
-# Declarative OpenAI Codex setup: the shared MCP server set plus the SuperClaude
-# command set ported to Codex "skills" (the SuperCodex-style framework).
+# Declarative OpenAI Codex user configuration. The Codex executable is installed
+# separately; Home Manager owns the shared MCP server set, instructions, and
+# generated skills under ~/.codex.
 #
 # MCP -- mirrors the Claude Code server set (context7, sequential-thinking,
 # playwright, serena, tavily, lldb). Written into ~/.codex/config.toml under [mcp_servers.*] on every
