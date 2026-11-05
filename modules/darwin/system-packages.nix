@@ -92,6 +92,7 @@ in
     kittyForAeroSpace
     sops
     age
+    (callPackage ../../pkgs/screen-tool.nix { })
     ffmpeg
     ffmpeg.dev
     imath
