@@ -12,7 +12,8 @@ in
   xdg.configFile."sapling/sapling.conf".text = ''
     [ui]
     username = ${git.settings.user.name} <${git.settings.user.email}>
-    merge = :merge3
+    merge = internal:merge3
+    merge:interactive = internal:merge3
 
     [gpg]
     key = ${git.signing.key}
